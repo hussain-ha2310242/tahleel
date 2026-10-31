@@ -1,0 +1,65 @@
+/* Tahleel base: tokens, top bar, buttons, motion. Shared by landing and app. */
+:root {
+  --paper: #F6F5F1;
+  --card: #FFFFFF;
+  --ink: #18181B;
+  --mute: #6B6B70;
+  --line: #DCDAD2;
+  --fill: #ECEAE3;
+  --r-lg: 14px;
+  --r-md: 10px;
+  --r-sm: 8px;
+  --pill: 999px;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --bar: 48px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: var(--paper); color: var(--ink); font-family: 'Inter', system-ui, sans-serif; font-size: 13px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: default; }
+.serif { font-family: 'Fraunces', Georgia, serif; font-weight: 400; letter-spacing: -0.01em; margin: 0; }
+.mute { color: var(--mute); }
+.small { font-size: 12px; }
+[hidden] { display: none !important; }
+
+/* Icons */
+.ic { width: 16px; height: 16px; flex: none; display: inline-block; vertical-align: middle; }
+
+/* Top bar (same on landing and app) */
+.topbar { height: 54px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid var(--line); background: var(--paper); position: sticky; top: 0; z-index: 20; }
+.wordmark { font-family: 'Fraunces', Georgia, serif; font-size: 23px; letter-spacing: -0.015em; color: var(--ink); text-decoration: none; }
+.topbar-r { display: flex; align-items: center; gap: 8px; }
+.profile { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--card); border-radius: var(--pill); padding: 3px 10px 3px 3px; font-size: 12px; }
+.avatar { width: 24px; height: 24px; border-radius: 50%; background: var(--ink); color: var(--paper); display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
+.profile .tag { font-size: 10px; color: var(--mute); border: 1px solid var(--line); border-radius: var(--pill); padding: 0 6px; }
+
+/* Buttons */
+.btn-dark, .btn-line, .btn-ghost { display: inline-flex; align-items: center; gap: 6px; border-radius: var(--pill); padding: 6px 14px; font-size: 13px; font-weight: 500; transition: background-color .2s var(--ease), color .2s var(--ease), transform .2s var(--ease), border-color .2s var(--ease); text-decoration: none; }
+.btn-dark { background: var(--ink); color: var(--paper); border: 1px solid var(--ink); }
+.btn-dark:hover { transform: translateY(-1px); }
+.btn-line { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
+.btn-line:hover { background: var(--ink); color: var(--paper); }
+.btn-ghost { background: var(--card); color: var(--ink); border: 1px solid var(--line); }
+.btn-ghost:hover { background: var(--fill); }
+.btn-dark:disabled, .btn-line:disabled, .btn-ghost:disabled { opacity: .45; transform: none; }
+.icon-btn { width: 28px; height: 28px; border-radius: var(--r-sm); border: 1px solid transparent; background: transparent; color: var(--mute); display: inline-flex; align-items: center; justify-content: center; transition: background-color .2s var(--ease), color .2s var(--ease); }
+.icon-btn:hover { background: var(--fill); color: var(--ink); }
+.icon-btn:disabled { opacity: .4; }
+.icon-btn:disabled:hover { background: transparent; color: var(--mute); }
+.icon-btn.solid { background: var(--ink); color: var(--paper); border-radius: 50%; width: 32px; height: 32px; }
+.icon-btn.solid:hover { background: var(--ink); color: var(--paper); transform: translateY(-1px); }
+.icon-btn.solid:hover .ic { transform: translateX(2px); }
+.icon-btn.solid .ic { transition: transform .25s var(--ease); }
+.soon { font-size: 10px; border: 1px solid var(--line); border-radius: var(--pill); padding: 0 6px; color: var(--mute); margin-inline-start: 4px; }
+
+/* Shared motion */
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pulse { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+.rise { animation: rise .35s var(--ease) both; }
+.fade { animation: fade .25s var(--ease) both; }
+.dots span { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--mute); margin-right: 3px; animation: pulse 1.2s infinite var(--ease); }
+.dots span:nth-child(2) { animation-delay: .15s; }
+.dots span:nth-child(3) { animation-delay: .3s; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }

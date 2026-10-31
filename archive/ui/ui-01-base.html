@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tahleel UI draft 01</title>
+<!-- Draft 01. Takes: sidebar project list (Rayyan), prompt-first home and task cards (SciSpace), folder tree, table and right panel (Anara). Content is illustrative. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --paper:#F6F5F1; --card:#FFFFFF; --ink:#18181B; --mute:#6B6B70; --line:#DCDAD2; --fill:#ECEAE3; --later:#EFEEE9; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; height:100%; background:var(--paper); color:var(--ink); font-family:'Inter', system-ui, sans-serif; font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  .serif { font-family:'Fraunces', Georgia, serif; font-weight:400; letter-spacing:-0.01em; }
+  button, input, textarea, select { font:inherit; color:inherit; }
+  button { cursor:pointer; }
+
+  .app { display:grid; grid-template-columns:232px 1fr; min-height:100vh; }
+  aside { border-right:1px solid var(--line); background:var(--card); padding:18px 12px; display:flex; flex-direction:column; gap:4px; }
+  .brand { font-family:'Fraunces', Georgia, serif; font-size:22px; padding:4px 10px 14px; }
+  .nav a, .nav button { display:flex; align-items:center; gap:10px; width:100%; padding:8px 10px; border:0; background:none; border-radius:8px; text-align:left; text-decoration:none; color:var(--ink); }
+  .nav a:hover, .nav button:hover { background:var(--fill); }
+  .nav a.active { background:var(--fill); font-weight:600; }
+  .nav .count { margin-inline-start:auto; font-size:12px; color:var(--mute); }
+  .nav .soon { margin-inline-start:auto; font-size:11px; color:var(--mute); border:1px dashed var(--mute); border-radius:999px; padding:0 7px; }
+  .nav a.off, .nav button.off { color:var(--mute); }
+  .label { font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--mute); padding:14px 10px 4px; }
+  .new { margin-top:auto; }
+  .btn { border:1px solid var(--ink); background:var(--ink); color:var(--paper); padding:8px 14px; border-radius:8px; font-weight:500; }
+  .btn.ghost { background:transparent; color:var(--ink); border-color:var(--line); }
+  .btn[disabled] { opacity:.45; cursor:not-allowed; }
+  .ico { width:16px; height:16px; flex:none; }
+
+  main { padding:28px 36px 48px; min-width:0; }
+  .top { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:24px; }
+  h1 { font-size:36px; line-height:1.1; margin:0; }
+  .mute { color:var(--mute); }
+  .pill { font-size:11px; padding:2px 9px; border-radius:999px; border:1px solid var(--line); color:var(--mute); white-space:nowrap; }
+  .pill.now { border-color:var(--ink); color:var(--ink); }
+
+  .view { display:none; }
+  .view.on { display:block; }
+
+  /* home */
+  .prompt { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 18px; max-width:760px; margin:24px auto 0; }
+  .prompt textarea { width:100%; min-height:84px; border:0; outline:none; resize:none; background:transparent; font-size:16px; }
+  .prompt .row { display:flex; justify-content:space-between; align-items:center; margin-top:8px; gap:8px; }
+  .hero { text-align:center; margin-top:36px; }
+  .hero h2 { font-size:44px; line-height:1.05; margin:0; }
+  .tasks { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; max-width:980px; margin:28px auto 0; }
+  .task { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; text-align:left; display:flex; flex-direction:column; gap:6px; }
+  .task:hover:not([disabled]) { transform:translateY(-2px); }
+  .task[disabled] { background:var(--later); color:var(--mute); cursor:not-allowed; border-style:dashed; }
+  .task b { font-weight:600; }
+  .task small { color:var(--mute); }
+  .task { transition:transform .2s ease; }
+
+  /* studies table */
+  .table { background:var(--card); border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+  .table .tr { display:grid; grid-template-columns:2.4fr 1fr 1fr 1fr 40px; gap:12px; align-items:center; padding:14px 18px; border-top:1px solid var(--line); }
+  .table .tr:first-child { border-top:0; background:var(--paper); font-size:12px; color:var(--mute); text-transform:uppercase; letter-spacing:.05em; }
+  .table .tr.row { cursor:pointer; }
+  .table .tr.row:hover { background:var(--fill); }
+  .table .tr b { font-weight:600; }
+
+  /* study view */
+  .study { display:grid; grid-template-columns:1fr 300px; gap:16px; }
+  .panel { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; }
+  .steps { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:18px; }
+  .steps button { border:1px solid var(--line); background:var(--card); border-radius:999px; padding:6px 12px; font-size:13px; }
+  .steps button.on { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .steps button[disabled] { background:var(--later); color:var(--mute); border-style:dashed; cursor:not-allowed; }
+  .steps button[disabled] small { font-size:10px; margin-left:4px; }
+  .qbox { width:100%; min-height:260px; border:1px solid var(--line); border-radius:10px; padding:12px; font-size:15px; line-height:1.7; resize:vertical; background:var(--paper); outline:none; }
+  .qbox:focus { border-color:var(--ink); }
+  .flag { border-top:1px solid var(--line); padding:10px 0; }
+  .flag:first-of-type { border-top:0; padding-top:0; }
+  .flag b { display:block; font-weight:600; font-size:13px; }
+  .flag small { color:var(--mute); }
+  .hidden { display:none !important; }
+
+  @media (max-width: 900px) {
+    .app { grid-template-columns:1fr; }
+    aside { border-right:0; border-bottom:1px solid var(--line); }
+    .tasks { grid-template-columns:1fr 1fr; }
+    .study { grid-template-columns:1fr; }
+    main { padding:20px 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before { transition:none !important; animation:none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand">Tahleel</div>
+    <nav class="nav">
+      <a href="#home" data-nav="home"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-6 8 6v8.5a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z"/></svg>Home</a>
+      <a href="#studies" data-nav="studies"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>Studies<span class="count">2</span></a>
+      <a href="#library" data-nav="library"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5A2 2 0 0 1 5.5 5.5h4l2 2h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg>Library</a>
+      <a href="#archived" data-nav="archived" class="off"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="4" rx="1"/><path d="M5 8.5v10.5h14V8.5M10 12.5h4"/></svg>Archived</a>
+    </nav>
+
+    <div class="label">Recent studies</div>
+    <nav class="nav">
+      <a href="#study" class="off">Coding club self-efficacy</a>
+      <a href="#study" class="off">Clinic waiting times</a>
+    </nav>
+
+    <div class="label">Later versions</div>
+    <nav class="nav">
+      <button class="off" disabled>Sample draw <span class="soon">V1</span></button>
+      <button class="off" disabled>Analysis <span class="soon">V1</span></button>
+      <button class="off" disabled>Ethics pack <span class="soon">V4</span></button>
+    </nav>
+
+    <div class="new">
+      <button class="btn" style="width:100%" onclick="location.hash='#home'">New study</button>
+    </div>
+  </aside>
+
+  <main>
+    <!-- HOME -->
+    <section class="view" id="view-home">
+      <div class="hero">
+        <h2 class="serif">What study are you planning?</h2>
+        <p class="mute">Start from one sentence. You can edit everything after.</p>
+      </div>
+      <div class="prompt">
+        <textarea placeholder="For example: Does a six-week coding club raise grade 10 science self-efficacy?"></textarea>
+        <div class="row">
+          <span class="mute" style="font-size:12px">Illustrative, not a real study</span>
+          <button class="btn" onclick="location.hash='#study'">Create plan</button>
+        </div>
+      </div>
+      <div class="tasks">
+        <button class="task" onclick="location.hash='#study'"><b>Plan a study</b><small>Objective, population, outcome</small><span class="pill now" style="align-self:flex-start">Version 0</span></button>
+        <button class="task" onclick="location.hash='#study'"><b>Check a questionnaire</b><small>Wording flags with rewrites</small><span class="pill now" style="align-self:flex-start">Version 0</span></button>
+        <button class="task" disabled><b>Calculate a sample</b><small>Size, power, margin of error</small><span class="pill" style="align-self:flex-start">Version 1</span></button>
+        <button class="task" disabled><b>Run an analysis</b><small>Tables, intervals, tests</small><span class="pill" style="align-self:flex-start">Version 1</span></button>
+      </div>
+    </section>
+
+    <!-- STUDIES (Rayyan-style list of separate projects) -->
+    <section class="view" id="view-studies">
+      <div class="top">
+        <div><h1 class="serif">Studies</h1><p class="mute" style="margin:6px 0 0">Each study is separate, with its own plan, questionnaire and data.</p></div>
+        <button class="btn" onclick="location.hash='#home'">New study</button>
+      </div>
+      <div class="table">
+        <div class="tr"><div>Study</div><div>Stage</div><div>Updated</div><div>Owner</div><div></div></div>
+        <div class="tr row" onclick="location.hash='#study'"><div><b>Coding club self-efficacy</b><br><span class="mute" style="font-size:12px">Illustrative</span></div><div><span class="pill now">Plan</span></div><div class="mute">Today</div><div class="mute">You</div><div>›</div></div>
+        <div class="tr row" onclick="location.hash='#study'"><div><b>Clinic waiting times</b><br><span class="mute" style="font-size:12px">Illustrative</span></div><div><span class="pill">Questionnaire</span></div><div class="mute">Yesterday</div><div class="mute">You</div><div>›</div></div>
+      </div>
+    </section>
+
+    <!-- LIBRARY (Anara-style folder and table) -->
+    <section class="view" id="view-library">
+      <div class="top"><div><h1 class="serif">Library</h1><p class="mute" style="margin:6px 0 0">Scales, questionnaires and frames you reuse across studies.</p></div></div>
+      <div class="table">
+        <div class="tr"><div>Item</div><div>Type</div><div>Used in</div><div></div><div></div></div>
+        <div class="tr"><div><b>Science self-efficacy (5 items)</b></div><div class="mute">Scale</div><div class="mute">1 study</div><div></div><div>›</div></div>
+        <div class="tr"><div><b>Simulated student frame</b></div><div class="mute">Frame</div><div class="mute">0 studies</div><div></div><div>›</div></div>
+      </div>
+    </section>
+
+    <!-- ARCHIVED (empty state) -->
+    <section class="view" id="view-archived">
+      <div class="top"><div><h1 class="serif">Archived</h1><p class="mute" style="margin:6px 0 0">Finished or paused studies. Nothing is deleted.</p></div></div>
+      <div class="panel" style="text-align:center; padding:48px"><p class="mute">No archived studies yet.</p></div>
+    </section>
+
+    <!-- STUDY (one study, stage tabs, right panel) -->
+    <section class="view" id="view-study">
+      <div class="top">
+        <div><div class="mute" style="font-size:12px">Coding club self-efficacy · Plan</div><h1 class="serif" style="font-size:30px">Coding club self-efficacy</h1></div>
+        <button class="btn ghost" onclick="location.hash='#studies'">Back to studies</button>
+      </div>
+      <div class="steps" role="tablist">
+        <button class="on" data-step="objective">Objective</button>
+        <button data-step="plan">Plan</button>
+        <button data-step="questionnaire">Questionnaire</button>
+        <button disabled data-step="sample">Sample <small>V1</small></button>
+        <button disabled data-step="data">Data <small>V1</small></button>
+        <button disabled data-step="analysis">Analysis <small>V1</small></button>
+        <button disabled data-step="report">Report <small>V1</small></button>
+      </div>
+      <div class="study">
+        <div class="panel">
+          <div data-pane="objective">
+            <h3 class="serif" style="font-size:22px;margin:0 0 8px">Objective</h3>
+            <p class="mute" style="margin:0 0 12px">One sentence. The plan is built from it.</p>
+            <textarea class="qbox" style="min-height:120px">Does a six-week coding club raise grade 10 science self-efficacy compared with a comparison group?</textarea>
+          </div>
+          <div data-pane="plan" class="hidden">
+            <h3 class="serif" style="font-size:22px;margin:0 0 8px">Plan</h3>
+            <p class="mute">Population: grade 10 students. Design: pre/post with comparison. Primary outcome: science self-efficacy. Per-group sample (illustrative): 175.</p>
+          </div>
+          <div data-pane="questionnaire" class="hidden">
+            <h3 class="serif" style="font-size:22px;margin:0 0 8px">Questionnaire</h3>
+            <p class="mute" style="margin:0 0 12px">One question per line.</p>
+            <textarea class="qbox">How satisfied are you with the teaching and the facilities?
+Don't you agree that coding is useful for science?
+I feel confident solving science problems.</textarea>
+          </div>
+        </div>
+        <aside class="panel" style="border-left:1px solid var(--line)">
+          <div class="label" style="padding:0 0 8px">Checks</div>
+          <div class="flag"><b>Line 1 · Double-barrelled</b><small>Two ideas joined by "and". Suggested: split into two questions.</small></div>
+          <div class="flag"><b>Line 2 · Leading</b><small>"Don't you agree". Suggested: ask neutrally.</small></div>
+          <div class="flag"><b>Line 3 · No flags</b><small>Looks clear.</small></div>
+        </aside>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+  var views = ['home','studies','library','archived','study'];
+  function route() {
+    var h = (location.hash || '#home').slice(1);
+    if (views.indexOf(h) < 0) h = 'home';
+    views.forEach(function (v) { document.getElementById('view-' + v).classList.toggle('on', v === h); });
+    document.querySelectorAll('[data-nav]').forEach(function (a) { a.classList.toggle('active', a.dataset.nav === h); });
+  }
+  window.addEventListener('hashchange', route);
+  route();
+
+  document.querySelectorAll('.steps button:not([disabled])').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.steps button').forEach(function (x) { x.classList.toggle('on', x === b); });
+      document.querySelectorAll('[data-pane]').forEach(function (p) { p.classList.toggle('hidden', p.dataset.pane !== b.dataset.step); });
+    });
+  });
+</script>
+</body>
+</html>

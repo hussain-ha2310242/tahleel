@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tahleel · تحليل</title>
+<meta name="description" content="Tahleel drafts the population, sampling, questions and checks for a research study. You confirm each step.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/base.css">
+<style>
+  :root { --later: #EFEEE9; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  /* Hero: the name leads. */
+  .hero { text-align: center; padding: 84px 0 44px; }
+  .brand { font-family: 'Fraunces', Georgia, serif; font-weight: 400; font-size: 112px; line-height: .95; letter-spacing: -0.035em; margin: 0; }
+  .brand-ar { display: block; font-family: system-ui, "Geeza Pro", "Noto Naskh Arabic", "Segoe UI", sans-serif; font-size: 20px; color: var(--mute); letter-spacing: 0; margin-top: 10px; }
+  .tag { font-family: 'Fraunces', Georgia, serif; font-size: 19px; margin: 22px 0 0; }
+  .hero p.sub { color: var(--mute); font-size: 13px; margin: 6px 0 0; }
+  .cta { display: flex; gap: 8px; justify-content: center; margin-top: 22px; }
+  .cta a { padding: 9px 18px; font-size: 14px; }
+  .cta .ic { width: 15px; height: 15px; transition: transform .25s var(--ease); }
+  .cta .btn-dark:hover .ic { transform: translateX(3px); }
+
+  /* Bands and bento */
+  .band { margin-top: 40px; scroll-margin-top: 64px; }
+  .bhead { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+  .bhead h2 { font-size: 24px; }
+  .pill { font-size: 11px; font-weight: 500; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--ink); white-space: nowrap; }
+  .pill.next { border-color: var(--line); }
+  .pill.later { border-color: var(--line); color: var(--mute); }
+  .pill.gated { border-color: var(--mute); color: var(--mute); border-style: dashed; }
+  .bento { display: grid; grid-template-columns: repeat(12, 1fr); gap: 12px; }
+  .s2 { grid-column: span 2; } .s3 { grid-column: span 3; } .s4 { grid-column: span 4; } .s5 { grid-column: span 5; } .s6 { grid-column: span 6; } .s7 { grid-column: span 7; }
+
+  .t { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 16px 18px; display: flex; flex-direction: column; gap: 3px; min-height: 108px; transition: transform .25s var(--ease), box-shadow .25s var(--ease); overflow: hidden; }
+  .t h3 { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: 0; }
+  .t p { margin: 0; font-size: 12.5px; color: var(--mute); }
+  .t .v { margin-top: auto; padding-top: 14px; }
+  .now .t { border-color: var(--ink); }
+  .now .t:hover, .next .t:hover { transform: translateY(-2px); }
+  .now .t:hover { box-shadow: 0 14px 26px -20px rgba(24, 24, 27, .5); }
+  .next .t:hover { box-shadow: 0 14px 26px -20px rgba(24, 24, 27, .4); }
+  .later .t { background: var(--later); min-height: 92px; }
+  .later .t h3, .later .t p, .later .t .v { opacity: .75; }
+  .gated .t { background: var(--paper); border-style: dashed; border-color: #b9b8b2; min-height: 84px; }
+  .gated .t h3, .gated .t p { opacity: .6; }
+
+  /* Reveal on scroll: fade and rise 8px, once, staggered (first brainstorm motion). */
+  .reveal { opacity: 0; transform: translateY(8px); transition: opacity .5s ease, transform .5s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+
+  /* Tile visuals. Loops run only while the tile is on screen (.play). */
+  .v * { animation-play-state: paused; }
+  .play .v * { animation-play-state: running; }
+
+  .mini-comp { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 22px; padding: 6px 6px 6px 14px; background: var(--paper); font-size: 13px; }
+  .mini-comp .txt { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: clip; }
+  .caret { display: inline-block; width: 1px; height: 15px; background: var(--ink); vertical-align: -3px; margin-left: 1px; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .mini-go { width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: var(--paper); display: inline-flex; align-items: center; justify-content: center; flex: none; }
+  .mini-go .ic { width: 14px; height: 14px; }
+
+  .rows { display: flex; flex-direction: column; gap: 6px; }
+  .dr { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+  .dr i { width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--line); display: inline-flex; align-items: center; justify-content: center; flex: none; position: relative; }
+  .dr i::after { content: ''; position: absolute; inset: -1px; border-radius: 50%; background: var(--ink); transform: scale(0); animation: tickOn 5s var(--ease) infinite; }
+  .dr i .ic { width: 10px; height: 10px; color: var(--paper); position: relative; z-index: 1; opacity: 0; animation: tickIc 5s var(--ease) infinite; }
+  .dr:nth-child(2) i::after, .dr:nth-child(2) i .ic { animation-delay: .6s; }
+  .dr:nth-child(3) i::after, .dr:nth-child(3) i .ic { animation-delay: 1.2s; }
+  .dr em { font-style: normal; color: var(--mute); margin-left: auto; }
+  @keyframes tickOn { 0%, 6% { transform: scale(0); } 14%, 86% { transform: scale(1); } 94%, 100% { transform: scale(0); } }
+  @keyframes tickIc { 0%, 10% { opacity: 0; } 16%, 86% { opacity: 1; } 92%, 100% { opacity: 0; } }
+
+  .lk { display: flex; gap: 5px; }
+  .lk span { flex: 1; height: 22px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); animation: pick 6s var(--ease) infinite; }
+  .lk span:nth-child(2) { animation-delay: 1.2s; } .lk span:nth-child(3) { animation-delay: 2.4s; } .lk span:nth-child(4) { animation-delay: 3.6s; } .lk span:nth-child(5) { animation-delay: 4.8s; }
+  @keyframes pick { 0%, 4% { background: var(--paper); border-color: var(--line); } 8%, 18% { background: var(--ink); border-color: var(--ink); } 24%, 100% { background: var(--paper); border-color: var(--line); } }
+  .lkcap { display: flex; justify-content: space-between; font-size: 11px; color: var(--mute); margin-top: 6px; }
+
+  .rw { font-size: 12.5px; display: flex; flex-direction: column; gap: 6px; }
+  .rw .old { color: var(--mute); position: relative; width: fit-content; }
+  .rw .old::after { content: ''; position: absolute; left: 0; top: 52%; height: 1px; background: var(--ink); width: 0; animation: strike 6s var(--ease) infinite; }
+  .rw .new { opacity: 0; transform: translateY(4px); animation: newIn 6s var(--ease) infinite; }
+  @keyframes strike { 0%, 12% { width: 0; } 30%, 88% { width: 100%; } 100% { width: 0; } }
+  @keyframes newIn { 0%, 30% { opacity: 0; transform: translateY(4px); } 40%, 88% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+
+  .big { font-family: 'Fraunces', Georgia, serif; font-size: 40px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .big small { font-family: 'Inter', sans-serif; font-size: 11.5px; color: var(--mute); margin-left: 6px; }
+
+  .draw { display: grid; grid-template-columns: repeat(14, 1fr); gap: 5px; }
+  .draw b { aspect-ratio: 1; border-radius: 50%; background: var(--fill); transition: background-color .4s var(--ease), transform .4s var(--ease); }
+  .draw b.on { background: var(--ink); transform: scale(1.15); }
+
+  .csv { display: flex; flex-direction: column; gap: 4px; }
+  .csv span { height: 9px; border-radius: 4px; background: var(--fill); animation: slide 4.5s var(--ease) infinite; transform-origin: left; }
+  .csv span:nth-child(1) { width: 92%; background: #d9d7cf; } .csv span:nth-child(2) { width: 78%; animation-delay: .25s; } .csv span:nth-child(3) { width: 86%; animation-delay: .5s; } .csv span:nth-child(4) { width: 64%; animation-delay: .75s; }
+  @keyframes slide { 0% { transform: scaleX(0); opacity: 0; } 14%, 84% { transform: scaleX(1); opacity: 1; } 100% { transform: scaleX(1); opacity: 0; } }
+
+  .ci { display: flex; flex-direction: column; gap: 9px; }
+  .ci div { position: relative; height: 10px; }
+  .ci div::before { content: ''; position: absolute; left: 0; right: 0; top: 4.5px; height: 1px; background: var(--line); }
+  .ci i { position: absolute; top: 3px; height: 4px; border-radius: 2px; background: var(--ink); animation: ciGrow 5s var(--ease) infinite; transform-origin: center; }
+  .ci i::after { content: ''; position: absolute; left: 50%; top: -3px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: var(--card); border: 2px solid var(--ink); box-sizing: border-box; }
+  .ci div:nth-child(2) i { animation-delay: .3s; } .ci div:nth-child(3) i { animation-delay: .6s; }
+  @keyframes ciGrow { 0% { transform: scaleX(.1); } 22%, 86% { transform: scaleX(1); } 100% { transform: scaleX(.1); } }
+
+  .mon { display: flex; flex-direction: column; gap: 6px; }
+  .mon .bar { height: 8px; border-radius: 4px; background: var(--fill); overflow: hidden; }
+  .mon .bar i { display: block; height: 100%; width: 72%; background: var(--ink); border-radius: 4px; transform-origin: left; animation: fill 5s var(--ease) infinite; }
+  .mon .cap { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--mute); font-variant-numeric: tabular-nums; }
+  @keyframes fill { 0% { transform: scaleX(.05); } 60%, 88% { transform: scaleX(1); } 100% { transform: scaleX(.05); } }
+
+  .files { display: flex; gap: 6px; flex-wrap: wrap; }
+  .files span { font-size: 11.5px; border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; background: var(--paper); font-variant-numeric: tabular-nums; animation: fileUp 4s var(--ease) infinite; }
+  .files span:nth-child(2) { animation-delay: .4s; }
+  @keyframes fileUp { 0%, 10% { transform: none; } 20% { transform: translateY(-3px); } 30%, 100% { transform: none; } }
+
+  .strat { display: flex; height: 10px; border-radius: 5px; overflow: hidden; gap: 2px; }
+  .strat i { background: #8f8e88; animation: grow 5s var(--ease) infinite; transform-origin: left; }
+  .strat i:nth-child(1) { flex: 5; background: var(--ink); } .strat i:nth-child(2) { flex: 3; animation-delay: .2s; } .strat i:nth-child(3) { flex: 2; background: #c3c1b9; animation-delay: .4s; }
+  @keyframes grow { 0% { transform: scaleX(0); } 20%, 88% { transform: scaleX(1); } 100% { transform: scaleX(0); } }
+
+  .pwf { display: flex; gap: 10px; font-size: 11.5px; color: var(--mute); }
+  .pwf span { display: inline-flex; align-items: center; gap: 4px; }
+  .pwf i { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--ink); }
+  .pwf span:nth-child(1) i { background: var(--ink); }
+  .pwf span:nth-child(2) i { background: linear-gradient(90deg, var(--ink) 50%, transparent 50%); }
+
+  .holm { display: flex; align-items: flex-end; gap: 4px; height: 28px; }
+  .holm i { flex: 1; background: #c3c1b9; border-radius: 2px 2px 0 0; animation: step 5s var(--ease) infinite; }
+  .holm i:nth-child(1) { height: 30%; } .holm i:nth-child(2) { height: 45%; animation-delay: .35s; } .holm i:nth-child(3) { height: 60%; animation-delay: .7s; } .holm i:nth-child(4) { height: 78%; animation-delay: 1.05s; } .holm i:nth-child(5) { height: 100%; animation-delay: 1.4s; }
+  @keyframes step { 0%, 6% { background: #c3c1b9; } 12%, 80% { background: var(--ink); } 90%, 100% { background: #c3c1b9; } }
+
+  footer { margin: 56px 0 40px; padding-top: 16px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--mute); }
+
+  @media (max-width: 900px) {
+    .brand { font-size: 80px; }
+    .s2, .s3 { grid-column: span 6; }
+    .s4, .s5, .s6, .s7 { grid-column: span 12; }
+  }
+  @media (max-width: 560px) {
+    .hero { padding-top: 56px; }
+    .brand { font-size: 64px; }
+    .s2, .s3 { grid-column: span 12; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; }
+    .rw .old::after { width: 100%; }
+    .rw .new { opacity: 1; transform: none; }
+    .dr i::after { transform: scale(1); }
+    .dr i .ic { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <section class="hero rise">
+    <h1 class="brand">Tahleel<span class="brand-ar" lang="ar">تحليل</span></h1>
+    <p class="tag">Objective in. Survey plan out.</p>
+    <p class="sub">Drafted from one sentence. Confirmed by you.</p>
+    <div class="cta">
+      <a class="btn-dark" href="/app/">Start <span data-ic="arrowR"></span></a>
+      <a class="btn-line" href="/app/?demo=1">Open demo</a>
+    </div>
+  </section>
+
+  <!-- Version 0: built -->
+  <section class="band now" id="now">
+    <div class="bhead"><span class="pill">Now</span><h2 class="serif">Objective to questions</h2></div>
+    <div class="bento">
+      <article class="t s7 reveal">
+        <h3>Objective input</h3><p>One plain sentence.</p>
+        <div class="v"><div class="mini-comp"><span class="txt"><span id="typed"></span><span class="caret"></span></span><span class="mini-go" data-ic="arrowUp"></span></div></div>
+      </article>
+      <article class="t s5 reveal">
+        <h3>Draft plan</h3><p>Population, design, outcome.</p>
+        <div class="v rows">
+          <div class="dr"><i data-ic="check"></i>Population<em>Students · Qatar</em></div>
+          <div class="dr"><i data-ic="check"></i>Design<em>Stratified</em></div>
+          <div class="dr"><i data-ic="check"></i>Outcome<em>AI use</em></div>
+        </div>
+      </article>
+      <article class="t s5 reveal">
+        <h3>Questionnaire builder</h3><p>Response type and time per question.</p>
+        <div class="v"><div class="lk"><span></span><span></span><span></span><span></span><span></span></div><div class="lkcap"><span>Likert, 5 points</span><span>6 sec</span></div></div>
+      </article>
+      <article class="t s7 reveal">
+        <h3>Wording checker</h3><p>Leading and double-barrelled questions.</p>
+        <div class="v rw"><span class="old">Don't you agree that AI makes projects easier?</span><span class="new">To what extent do you think AI makes projects easier?</span></div>
+      </article>
+    </div>
+  </section>
+
+  <!-- Version 1 -->
+  <section class="band next" id="next">
+    <div class="bhead"><span class="pill next">Next</span><h2 class="serif">Minimal pipeline</h2></div>
+    <div class="bento">
+      <article class="t s4 reveal">
+        <h3>Sample size</h3><p>Two groups, one proportion.</p>
+        <div class="v"><span class="big" data-count="356">0</span><small class="mute"> responses</small></div>
+      </article>
+      <article class="t s4 reveal">
+        <h3>Simple random draw</h3><p>From a CSV frame, with a seed.</p>
+        <div class="v"><div class="draw" id="draw"></div></div>
+      </article>
+      <article class="t s4 reveal">
+        <h3>Data upload</h3><p>Responses in, tables out.</p>
+        <div class="v csv"><span></span><span></span><span></span><span></span></div>
+      </article>
+      <article class="t s6 reveal">
+        <h3>Basic analysis</h3><p>Intervals, t-test, chi-square.</p>
+        <div class="v ci"><div><i style="left:18%;width:34%"></i></div><div><i style="left:40%;width:22%"></i></div><div><i style="left:28%;width:44%"></i></div></div>
+      </article>
+      <article class="t s3 reveal">
+        <h3>Monitor responses</h3><p>Live count against your target.</p>
+        <div class="v mon"><div class="bar"><i></i></div><div class="cap"><span>256 in</span><span>356 target</span></div></div>
+      </article>
+      <article class="t s3 reveal">
+        <h3>Plain export</h3><p>CSV and a one-page summary.</p>
+        <div class="v files"><span>results.csv</span><span>summary</span></div>
+      </article>
+    </div>
+  </section>
+
+  <!-- Version 3 -->
+  <section class="band later" id="later">
+    <div class="bhead"><span class="pill later">Later</span><h2 class="serif">Useful extras</h2></div>
+    <div class="bento">
+      <article class="t s3 reveal"><h3>Sampling advisor</h3><p>Suggests a design, with reasons.</p></article>
+      <article class="t s3 reveal"><h3>Stratified draw</h3><p>Proportional allocation.</p><div class="v"><div class="strat"><i></i><i></i><i></i></div></div></article>
+      <article class="t s3 reveal"><h3>Reliability</h3><p>Cronbach's alpha, item-total.</p><div class="v"><span class="big" style="font-size:24px">α <span data-count="0.82" data-dec="2">0.00</span></span></div></article>
+      <article class="t s3 reveal"><h3>Assumption checks</h3><p>With reasons.</p><div class="v pwf"><span><i></i>Pass</span><span><i></i>Warn</span><span><i></i>Fail</span></div></article>
+      <article class="t s3 reveal"><h3>Multiple-test correction</h3><p>Holm step-down.</p><div class="v"><div class="holm"><i></i><i></i><i></i><i></i><i></i></div></div></article>
+      <article class="t s3 reveal"><h3>Report export</h3><p>Word and HTML, one source.</p></article>
+      <article class="t s3 reveal"><h3>Light ethics flags</h3><p>Minors and health data.</p></article>
+      <article class="t s3 reveal"><h3>Duplicate and speeder flags</h3><p>Flagged, never removed.</p></article>
+    </div>
+  </section>
+
+  <!-- Version 4 -->
+  <section class="band gated" id="advanced">
+    <div class="bhead"><span class="pill gated">Advanced</span><h2 class="serif">After real use</h2></div>
+    <div class="bento">
+      <article class="t s4 reveal"><h3>Reproducibility bundle</h3><p>Hashes, versions, verified reruns.</p></article>
+      <article class="t s4 reveal"><h3>Multilevel models</h3><p>Students within classes.</p></article>
+      <article class="t s4 reveal"><h3>Measurement models</h3><p>Factor analysis, invariance.</p></article>
+      <article class="t s6 reveal"><h3>Full ethics pack</h3><p>Consent and data plan, English and عربي.</p></article>
+      <article class="t s6 reveal"><h3>Sensitivity analyses</h3><p>Other exclusions and imputations.</p></article>
+    </div>
+  </section>
+
+  <footer><span>Tahleel · تحليل</span><span>Estimates are illustrative until a statistician reviews them.</span></footer>
+</main>
+
+<script src="/assets/icons.js"></script>
+<script src="/assets/common.js"></script>
+<script>
+  (function () {
+    var TC = window.TC, ic = window.TI.ic;
+    document.querySelectorAll('[data-ic]').forEach(function (el) { el.insertAdjacentHTML('beforeend', ic(el.getAttribute('data-ic'))); });
+
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Reveal once, staggered. Visual loops play only while on screen.
+    var tiles = document.querySelectorAll('.reveal');
+    if (!('IntersectionObserver' in window)) tiles.forEach(function (t) { t.classList.add('in', 'play'); });
+    else {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          en.target.classList.toggle('play', en.isIntersecting);
+          if (en.isIntersecting && !en.target.classList.contains('in')) {
+            en.target.classList.add('in');
+            en.target.querySelectorAll('[data-count]').forEach(countUp);
+          }
+        });
+      }, { threshold: 0.15 });
+      tiles.forEach(function (t, i) { t.style.transitionDelay = (i % 6) * 60 + 'ms'; io.observe(t); });
+    }
+
+    function countUp(el) {
+      var to = Number(el.getAttribute('data-count')), dec = Number(el.getAttribute('data-dec') || 0);
+      if (reduce) { el.textContent = to.toFixed(dec); return; }
+      var t0 = performance.now(), dur = 1100;
+      (function f(now) {
+        var p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+        el.textContent = (to * e).toFixed(dec);
+        if (p < 1) requestAnimationFrame(f);
+      })(t0);
+    }
+
+    // Objective input: example objectives typed one by one.
+    var EX = ['AI use for projects at Qatar University', 'Screen time and sleep in Doha schools', 'Barriers to diabetes screening in clinics', "Teachers' readiness for inclusive classrooms"];
+    var typed = document.getElementById('typed');
+    if (reduce) typed.textContent = EX[0];
+    else (function () {
+      var ex = 0, pos = 0, dir = 1, hold = 0;
+      (function tick() {
+        if (hold > 0) { hold--; return setTimeout(tick, 100); }
+        var s = EX[ex];
+        pos += dir;
+        typed.textContent = s.slice(0, pos);
+        if (pos >= s.length) { dir = -1; hold = 16; }
+        else if (pos <= 0) { dir = 1; ex = (ex + 1) % EX.length; hold = 3; }
+        setTimeout(tick, dir > 0 ? 45 + Math.random() * 45 : 16);
+      })();
+    })();
+
+    // Random draw: a fresh seeded-looking sample every few seconds.
+    var draw = document.getElementById('draw');
+    draw.innerHTML = new Array(42).join('<b></b>') + '<b></b>';
+    var cells = draw.children;
+    function reseed() {
+      for (var i = 0; i < cells.length; i++) cells[i].classList.toggle('on', Math.random() < 0.22);
+    }
+    reseed();
+    if (!reduce) setInterval(function () { if (draw.closest('.play')) reseed(); }, 1800);
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tahleel UI draft 02</title>
+<!-- Draft 02. Changes from 01: Studies renamed to Projects; Library is a folder directory; Recent cards in the sidebar; project home with what was done per stage; demo project with sample queries. Content is illustrative. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --paper:#F6F5F1; --card:#FFFFFF; --ink:#18181B; --mute:#6B6B70; --line:#DCDAD2; --fill:#ECEAE3; --later:#EFEEE9; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; min-height:100%; background:var(--paper); color:var(--ink); font-family:'Inter', system-ui, sans-serif; font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  button, textarea { font:inherit; color:inherit; }
+  button { cursor:pointer; }
+  .serif { font-family:'Fraunces', Georgia, serif; font-weight:400; letter-spacing:-0.01em; margin:0; }
+  .mute { color:var(--mute); }
+  .hidden { display:none !important; }
+
+  .app { display:grid; grid-template-columns:248px 1fr; min-height:100vh; }
+  aside { background:var(--card); border-right:1px solid var(--line); padding:20px 14px; display:flex; flex-direction:column; gap:6px; position:sticky; top:0; height:100vh; overflow-y:auto; }
+  .brand { font-family:'Fraunces', Georgia, serif; font-size:22px; padding:2px 10px 16px; }
+  .nav button { display:flex; align-items:center; gap:10px; width:100%; padding:8px 10px; border:0; background:none; border-radius:8px; text-align:left; }
+  .nav button:hover { background:var(--fill); }
+  .nav button.on { background:var(--fill); font-weight:600; }
+  .ico { width:16px; height:16px; flex:none; }
+  .label { font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--mute); padding:18px 10px 8px; }
+  .recent { display:flex; flex-direction:column; gap:8px; }
+  .rcard { text-align:left; background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:10px 12px; display:flex; flex-direction:column; gap:3px; }
+  .rcard:hover { background:var(--fill); }
+  .rcard b { font-size:13px; font-weight:600; }
+  .rcard .meta { display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:12px; color:var(--mute); }
+  .type { font-size:11px; border:1px solid var(--ink); border-radius:999px; padding:0 7px; color:var(--ink); white-space:nowrap; }
+  .newbtn { margin-top:auto; border:1px solid var(--ink); background:var(--ink); color:var(--paper); padding:9px 14px; border-radius:8px; font-weight:500; }
+
+  main { min-width:0; padding:36px 40px 56px; }
+  .wrap { max-width:880px; margin:0 auto; }
+  .pagehead { display:flex; justify-content:space-between; align-items:flex-end; gap:16px; margin-bottom:24px; }
+  h1 { font-size:34px; line-height:1.1; }
+  h2 { font-size:22px; line-height:1.2; }
+  .sub { color:var(--mute); margin:6px 0 0; }
+  .btn { border:1px solid var(--ink); background:var(--ink); color:var(--paper); padding:8px 14px; border-radius:8px; font-weight:500; white-space:nowrap; }
+  .btn.ghost { background:transparent; color:var(--ink); border-color:var(--line); }
+  .pill { font-size:11px; padding:2px 9px; border-radius:999px; border:1px solid var(--line); color:var(--mute); white-space:nowrap; }
+  .pill.done { border-color:var(--ink); color:var(--ink); }
+  .pill.wip { border-color:var(--mute); color:var(--ink); }
+  .pill.locked { border-style:dashed; }
+
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; }
+  .card.locked { background:var(--later); border-style:dashed; color:var(--mute); }
+
+  /* home */
+  .prompt { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 16px; }
+  .prompt textarea { width:100%; min-height:72px; border:0; outline:none; resize:none; background:transparent; font-size:15px; }
+  .prompt .row { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:6px; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 0; }
+  .chip { border:1px solid var(--line); background:var(--card); border-radius:999px; padding:5px 12px; font-size:13px; }
+  .chip:hover { background:var(--fill); }
+  .section { margin-top:32px; }
+  .section > .label { padding:0 0 10px; }
+  .tasks { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; }
+  .task { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; text-align:left; display:flex; flex-direction:column; gap:4px; min-height:88px; }
+  .task:hover:not([disabled]) { background:var(--fill); }
+  .task b { font-weight:600; font-size:13px; }
+  .task small { color:var(--mute); font-size:12px; line-height:1.35; }
+  .task[disabled] { background:var(--later); border-style:dashed; color:var(--mute); cursor:not-allowed; }
+  .demo { display:flex; justify-content:space-between; align-items:center; gap:16px; }
+  .demo .queries { margin-top:10px; display:flex; flex-direction:column; gap:6px; }
+  .demo .queries button { text-align:left; border:0; background:none; padding:4px 0; color:var(--ink); }
+  .demo .queries button:hover { text-decoration:underline; }
+
+  /* library */
+  .folder { background:var(--card); border:1px solid var(--line); border-radius:14px; margin-bottom:12px; overflow:hidden; }
+  .folder > button { width:100%; display:flex; align-items:center; gap:10px; padding:14px 18px; border:0; background:none; text-align:left; font-weight:600; font-size:15px; }
+  .folder > button .count { margin-left:auto; font-weight:400; font-size:12px; color:var(--mute); }
+  .folder .items { border-top:1px solid var(--line); }
+  .folder .items button { width:100%; display:flex; align-items:center; gap:12px; padding:12px 18px 12px 46px; border:0; border-top:1px solid var(--line); background:none; text-align:left; }
+  .folder .items button:first-child { border-top:0; }
+  .folder .items button:hover { background:var(--fill); }
+  .folder .items .stagepill { margin-left:auto; }
+
+  /* project home */
+  .stagelist { display:flex; flex-direction:column; gap:10px; }
+  .stagerow { display:grid; grid-template-columns:1fr auto; gap:6px 16px; align-items:center; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
+  .stagerow.locked { background:var(--later); border-style:dashed; color:var(--mute); }
+  .stagerow h3 { font-size:17px; margin:0; font-family:'Fraunces', Georgia, serif; font-weight:400; }
+  .stagerow p { margin:0; color:var(--mute); font-size:13px; grid-column:1; }
+  .stagerow .right { grid-column:2; grid-row:1 / span 2; display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
+  .stagerow .right .btn { padding:6px 12px; font-size:13px; }
+  .stagerow .right .btn[disabled] { opacity:.45; cursor:not-allowed; }
+  .log { margin:0; padding:0; list-style:none; }
+  .log li { display:grid; grid-template-columns:90px 1fr; gap:12px; padding:10px 0; border-top:1px solid var(--line); font-size:13px; }
+  .log li:first-child { border-top:0; padding-top:0; }
+  .log .when { color:var(--mute); }
+
+  /* stage editor */
+  .stageview { display:grid; grid-template-columns:1fr 280px; gap:16px; align-items:start; }
+  .steps { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
+  .steps button { border:1px solid var(--line); background:var(--card); border-radius:999px; padding:5px 12px; font-size:13px; }
+  .steps button.on { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .steps button[disabled] { background:var(--later); color:var(--mute); border-style:dashed; cursor:not-allowed; }
+  .qbox { width:100%; min-height:240px; border:1px solid var(--line); border-radius:10px; padding:12px; font-size:15px; line-height:1.7; resize:vertical; background:var(--paper); outline:none; }
+  .qbox:focus { border-color:var(--ink); }
+  .flag { border-top:1px solid var(--line); padding:10px 0; }
+  .flag:first-of-type { border-top:0; padding-top:0; }
+  .flag b { display:block; font-size:13px; font-weight:600; }
+  .flag small { color:var(--mute); }
+  .plan li { margin-bottom:6px; }
+
+  @media (max-width: 900px) {
+    .app { grid-template-columns:1fr; }
+    aside { position:static; height:auto; border-right:0; border-bottom:1px solid var(--line); }
+    .tasks { grid-template-columns:1fr 1fr; }
+    .stageview { grid-template-columns:1fr; }
+    main { padding:24px 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before { transition:none !important; animation:none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand">Tahleel</div>
+    <nav class="nav">
+      <button data-nav="home"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-6 8 6v8.5a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z"/></svg>Home</button>
+      <button data-nav="library"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5A2 2 0 0 1 5.5 5.5h4l2 2h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg>Library</button>
+    </nav>
+    <div class="label">Recent</div>
+    <div class="recent" id="recent"></div>
+    <button class="newbtn" id="newProject">New project</button>
+  </aside>
+
+  <main>
+    <div class="wrap">
+
+      <!-- HOME -->
+      <section id="v-home" class="hidden">
+        <div class="pagehead"><div><h1 class="serif">What would you like to research?</h1><p class="sub">Describe it in one sentence. You can change everything after.</p></div></div>
+        <div class="prompt">
+          <textarea id="prompt" placeholder="For example: Does a six-week coding club raise grade 10 science self-efficacy?"></textarea>
+          <div class="row"><span class="mute" style="font-size:12px">Illustrative, not a real study</span><button class="btn" id="createPlan">Create plan</button></div>
+        </div>
+        <div class="chips" id="queries"></div>
+
+        <div class="section">
+          <div class="label">Start a task</div>
+          <div class="tasks">
+            <button class="task" data-go="new"><b>Plan a study</b><small>Objective, population, outcome</small></button>
+            <button class="task" data-go="new-q"><b>Check a questionnaire</b><small>Wording flags with rewrites</small></button>
+            <button class="task" disabled><b>Calculate a sample</b><small>Available in Version 1</small></button>
+            <button class="task" disabled><b>Run an analysis</b><small>Available in Version 1</small></button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="label">Demo project</div>
+          <div class="card demo">
+            <div><h2 class="serif">Coding club self-efficacy</h2><p class="sub">A finished example: objective, plan and questionnaire checks. Your edits here are not saved.</p></div>
+            <button class="btn" data-open="demo">Open demo</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- LIBRARY: folders containing projects -->
+      <section id="v-library" class="hidden">
+        <div class="pagehead"><div><h1 class="serif">Library</h1><p class="sub">Folders hold your projects. Open a project to see what was done in each stage.</p></div></div>
+        <div id="folders"></div>
+      </section>
+
+      <!-- PROJECT HOME: what was done in each stage -->
+      <section id="v-project" class="hidden">
+        <div class="pagehead">
+          <div><div class="mute" style="font-size:12px" id="p-folder"></div><h1 class="serif" id="p-name"></h1><p class="sub" id="p-desc"></p></div>
+          <button class="btn ghost" data-nav="library">Back to library</button>
+        </div>
+        <div class="stagelist" id="p-stages"></div>
+        <div class="section">
+          <div class="label">Activity</div>
+          <ul class="log" id="p-log"></ul>
+        </div>
+      </section>
+
+      <!-- STAGE EDITOR -->
+      <section id="v-stage" class="hidden">
+        <div class="pagehead">
+          <div><div class="mute" style="font-size:12px" id="s-crumb"></div><h1 class="serif" id="s-title" style="font-size:30px"></h1></div>
+          <button class="btn ghost" id="s-back">Back to project</button>
+        </div>
+        <div class="steps" id="s-steps"></div>
+        <div class="stageview">
+          <div class="card" id="s-main"></div>
+          <div class="card" id="s-side"></div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<script>
+(function () {
+  // ---- data (illustrative) ----
+  var projects = [
+    { id:'demo', name:'Coding club self-efficacy', folder:'Demo', demo:true,
+      desc:'Pre/post study with comparison. Illustrative values only.',
+      objective:'Does a six-week coding club raise grade 10 science self-efficacy compared with a comparison group?',
+      plan:['Population: grade 10 students','Design: pre/post with comparison group','Primary outcome: science self-efficacy','Per-group sample (illustrative): 175'],
+      questionnaire:'How satisfied are you with the teaching and the facilities?\nDon\'t you agree that coding is useful for science?\nI feel confident solving science problems.',
+      log:[
+        { when:'Today', what:'Objective', stage:'objective' },
+        { when:'Today', what:'Plan draft', stage:'plan' },
+        { when:'Today', what:'Wording check', stage:'questionnaire' }
+      ] },
+    { id:'clinic', name:'Clinic waiting times', folder:'Public health',
+      desc:'Survey of patient waiting times in primary care. Illustrative.',
+      objective:'What is the average waiting time reported by patients in primary care clinics?',
+      plan:['Population: adult patients, primary care','Design: one-time survey','Primary outcome: reported waiting time (minutes)'],
+      questionnaire:'How long did you wait to see the doctor today, in minutes?\nWere the staff polite and helpful, and was the clinic clean?',
+      log:[
+        { when:'Yesterday', what:'Plan draft', stage:'plan' },
+        { when:'Yesterday', what:'Questions', stage:'questionnaire' }
+      ] },
+    { id:'teachers', name:'Teacher workload', folder:'Education',
+      desc:'Teacher workload and well-being, Doha schools. Illustrative.',
+      objective:'How do teachers in Doha describe their weekly workload?',
+      plan:['Population: teachers in government schools (to confirm)'],
+      questionnaire:'',
+      log:[ { when:'Last week', what:'Objective', stage:'objective' } ] }
+  ];
+
+  var STAGES = [
+    { key:'objective', name:'Objective', version:0 },
+    { key:'plan', name:'Plan', version:0 },
+    { key:'questionnaire', name:'Questionnaire', version:0 },
+    { key:'sample', name:'Sample', version:1 },
+    { key:'data', name:'Data', version:1 },
+    { key:'analysis', name:'Analysis', version:1 },
+    { key:'report', name:'Report', version:1 }
+  ];
+  var TYPE = { objective:'Plan', plan:'Plan', questionnaire:'Questionnaire', sample:'Sample', data:'Data', analysis:'Analysis', report:'Report' };
+  var QUERIES = [
+    'Does a six-week coding club raise self-efficacy?',
+    'Compare two schools with and without a reading programme',
+    'Check my questionnaire for leading questions'
+  ];
+
+  function byId(id) { return projects.filter(function (p) { return p.id === id; })[0]; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+  // ---- basic checks (rule-based, same idea as the checker in the plan) ----
+  function checkLine(line) {
+    var flags = [];
+    var t = line.trim();
+    if (!t) return flags;
+    if (/\b(and|or)\b/i.test(t) && /\?/.test(t) && t.split(/\b(and|or)\b/i).length > 2) flags.push({ t:'Double-barrelled', d:'Two ideas joined by "and" or "or". Suggested: split into two questions.' });
+    if (/don'?t you|obviously|unfortunately|most people/i.test(t)) flags.push({ t:'Leading', d:'Loaded wording. Suggested: ask the neutral form.' });
+    if (t.split(/\s+/).length > 25) flags.push({ t:'Long', d:'More than 25 words. Suggested: shorten.' });
+    return flags;
+  }
+
+  // ---- sidebar ----
+  function renderRecent() {
+    var items = [];
+    projects.forEach(function (p) { p.log.forEach(function (l) { items.push({ p:p, l:l }); }); });
+    var html = items.slice(0, 4).map(function (it) {
+      var type = TYPE[it.l.stage];
+      return '<button class="rcard" data-open="' + it.p.id + '" data-stage="' + it.l.stage + '">' +
+        '<b>' + esc(it.l.what) + '</b>' +
+        '<span class="meta"><span>' + esc(it.p.name) + '</span><span class="type">' + esc(type) + '</span></span></button>';
+    }).join('');
+    document.getElementById('recent').innerHTML = html;
+  }
+
+  // ---- home ----
+  function renderHome() {
+    document.getElementById('queries').innerHTML = QUERIES.map(function (q) {
+      return '<button class="chip" data-query="' + esc(q) + '">' + esc(q) + '</button>';
+    }).join('');
+  }
+
+  // ---- library ----
+  function renderLibrary() {
+    var folders = {};
+    projects.forEach(function (p) { (folders[p.folder] = folders[p.folder] || []).push(p); });
+    document.getElementById('folders').innerHTML = Object.keys(folders).map(function (f, i) {
+      var list = folders[f];
+      return '<div class="folder"><button data-toggle="' + i + '"><svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3.5 7.5A2 2 0 0 1 5.5 5.5h4l2 2h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z\"/></svg>' + esc(f) + '<span class="count">' + list.length + ' project' + (list.length > 1 ? 's' : '') + '</span></button>' +
+        '<div class="items' + (i === 0 ? '' : ' hidden') + '" id="f' + i + '">' +
+        list.map(function (p) {
+          var last = p.log[0] ? TYPE[p.log[p.log.length - 1].stage] : 'Plan';
+          return '<button data-open="' + p.id + '"><span>' + esc(p.name) + '</span><span class="pill stagepill">' + esc(last) + '</span></button>';
+        }).join('') + '</div></div>';
+    }).join('');
+  }
+
+  // ---- project home ----
+  function summary(p, key) {
+    if (key === 'objective') return p.objective ? 'Objective written' : 'No objective yet';
+    if (key === 'plan') return p.plan.length ? p.plan.length + ' plan lines drafted' : 'No plan yet';
+    if (key === 'questionnaire') {
+      var lines = p.questionnaire.split('\n').filter(function (l) { return l.trim(); });
+      if (!lines.length) return 'No questions yet';
+      var flags = 0; lines.forEach(function (l) { flags += checkLine(l).length; });
+      return lines.length + ' questions, ' + flags + ' flag' + (flags === 1 ? '' : 's');
+    }
+    return 'Available in Version 1';
+  }
+  function status(p, s) {
+    if (s.version > 0) return { cls:'locked', text:'Version 1', dis:true };
+    var empty = (s.key === 'objective' && !p.objective) || (s.key === 'plan' && !p.plan.length) || (s.key === 'questionnaire' && !p.questionnaire.trim());
+    return empty ? { cls:'wip', text:'Not started', dis:false } : { cls:'done', text:'Done', dis:false };
+  }
+  function renderProject(id) {
+    var p = byId(id); if (!p) return location.hash = '#library';
+    document.getElementById('p-folder').textContent = p.demo ? 'Demo project' : p.folder;
+    document.getElementById('p-name').textContent = p.name;
+    document.getElementById('p-desc').textContent = p.desc;
+    document.getElementById('p-stages').innerHTML = STAGES.map(function (s) {
+      var st = status(p, s);
+      return '<div class="stagerow ' + (s.version > 0 ? 'locked' : '') + '">' +
+        '<h3>' + esc(s.name) + '</h3>' +
+        '<p>' + esc(summary(p, s.key)) + '</p>' +
+        '<div class="right"><span class="pill ' + st.cls + '">' + esc(st.text) + '</span>' +
+        '<button class="btn" data-stage-open="' + s.key + '" data-id="' + p.id + '"' + (st.dis ? ' disabled' : '') + '>Open</button></div></div>';
+    }).join('');
+    document.getElementById('p-log').innerHTML = p.log.map(function (l) {
+      return '<li><span class="when">' + esc(l.when) + '</span><span>' + esc(l.what) + '</span></li>';
+    }).join('') || '<li><span class="mute">Nothing yet.</span></li>';
+  }
+
+  // ---- stage editor ----
+  var current = { id:null, stage:null };
+  function renderStage(id, key) {
+    var p = byId(id); if (!p) return location.hash = '#library';
+    current = { id:id, stage:key };
+    var s = STAGES.filter(function (x) { return x.key === key; })[0];
+    document.getElementById('s-crumb').textContent = p.name + ' · ' + TYPE[key];
+    document.getElementById('s-title').textContent = s.name;
+    document.getElementById('s-steps').innerHTML = STAGES.map(function (x) {
+      return '<button class="' + (x.key === key ? 'on' : '') + '" data-stage-open="' + x.key + '" data-id="' + p.id + '"' + (x.version ? ' disabled' : '') + '>' + esc(x.name) + (x.version ? ' · V1' : '') + '</button>';
+    }).join('');
+    var main = document.getElementById('s-main'), side = document.getElementById('s-side');
+    if (s.version > 0) {
+      main.className = 'card locked';
+      main.innerHTML = '<h2 class="serif">' + esc(s.name) + '</h2><p>This step is available in Version 1.</p>';
+      side.className = 'card locked'; side.innerHTML = '<p class="mute">Nothing to check yet.</p>';
+      return;
+    }
+    main.className = 'card';
+    side.className = 'card';
+    if (key === 'objective') {
+      main.innerHTML = '<p class="mute" style="margin:0 0 12px">One sentence. The plan is built from it.</p><textarea class="qbox" id="ed" style="min-height:140px">' + esc(p.objective) + '</textarea>';
+      side.innerHTML = '<h2 class="serif" style="font-size:18px;margin-bottom:10px">Draft plan</h2><ul class="plan" style="padding-left:18px;margin:0">' + p.plan.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>';
+      document.getElementById('ed').addEventListener('input', function (e) { p.objective = e.target.value; });
+    } else if (key === 'plan') {
+      main.innerHTML = '<p class="mute" style="margin:0 0 12px">Each line shows its source. Edit in a later version.</p><ul class="plan" style="padding-left:18px;margin:0">' + p.plan.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>';
+      side.innerHTML = '<h2 class="serif" style="font-size:18px;margin-bottom:10px">Sources</h2><p class="mute" style="margin:0">Your objective, the defaults for grade 10 studies, and illustrative values to confirm.</p>';
+    } else if (key === 'questionnaire') {
+      main.innerHTML = '<p class="mute" style="margin:0 0 12px">One question per line.</p><textarea class="qbox" id="ed">' + esc(p.questionnaire) + '</textarea>';
+      var render = function () {
+        var lines = p.questionnaire.split('\n');
+        var html = '';
+        lines.forEach(function (l, i) {
+          if (!l.trim()) return;
+          var f = checkLine(l);
+          html += '<div class="flag"><b>Line ' + (i + 1) + (f.length ? '' : ' · No flags') + '</b>' +
+            (f.length ? f.map(function (x) { return '<small><strong>' + esc(x.t) + ':</strong> ' + esc(x.d) + '</small>'; }).join('<br>') : '<small>Looks clear.</small>') + '</div>';
+        });
+        side.innerHTML = '<h2 class="serif" style="font-size:18px;margin-bottom:10px">Checks</h2>' + (html || '<p class="mute" style="margin:0">Add a question to see checks.</p>');
+      };
+      render();
+      document.getElementById('ed').addEventListener('input', function (e) { p.questionnaire = e.target.value; render(); });
+    }
+  }
+
+  // ---- routing ----
+  function show(view) {
+    ['home','library','project','stage'].forEach(function (v) {
+      document.getElementById('v-' + v).classList.toggle('hidden', v !== view);
+    });
+    document.querySelectorAll('[data-nav]').forEach(function (b) { b.classList.toggle('on', b.dataset.nav === view || (view === 'project' && b.dataset.nav === 'library') || (view === 'stage' && b.dataset.nav === 'library')); });
+  }
+  function route() {
+    var h = (location.hash || '#home').slice(1).split('/');
+    var page = h[0];
+    if (page === 'project' && h[1]) {
+      renderProject(h[1]); show('project');
+    } else if (page === 'stage' && h[1] && h[2]) {
+      renderStage(h[1], h[2]); show('stage');
+    } else if (page === 'library') {
+      renderLibrary(); show('library');
+    } else {
+      renderHome(); show('home');
+    }
+    renderRecent();
+  }
+  window.addEventListener('hashchange', route);
+
+  // ---- events ----
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('button'); if (!t || t.disabled) return;
+    if (t.dataset.nav) { location.hash = '#' + t.dataset.nav; return; }
+    if (t.dataset.query) { document.getElementById('prompt').value = t.dataset.query; document.getElementById('prompt').focus(); return; }
+    if (t.dataset.toggle !== undefined) { document.getElementById('f' + t.dataset.toggle).classList.toggle('hidden'); return; }
+    if (t.dataset.stageOpen) { location.hash = '#stage/' + t.dataset.id + '/' + t.dataset.stageOpen; return; }
+    if (t.dataset.open && t.dataset.stage) { location.hash = '#stage/' + t.dataset.open + '/' + t.dataset.stage; return; }
+    if (t.dataset.open) { location.hash = '#project/' + t.dataset.open; return; }
+    if (t.dataset.go) { location.hash = '#home'; document.getElementById('prompt').focus(); return; }
+    if (t.id === 'createPlan') {
+      var text = document.getElementById('prompt').value.trim() || 'Untitled objective';
+      var id = 'new' + Date.now();
+      projects.unshift({ id:id, name:text.length > 36 ? text.slice(0, 36) + '…' : text, folder:'Unfiled', desc:'Created from the home prompt.', objective:text,
+        plan:['Population: to define','Design: to define','Primary outcome: to define'], questionnaire:'',
+        log:[ { when:'Just now', what:'Plan draft', stage:'plan' } ] });
+      location.hash = '#project/' + id; return;
+    }
+    if (t.id === 'newProject') { location.hash = '#home'; document.getElementById('prompt').focus(); return; }
+    if (t.id === 's-back') { location.hash = '#project/' + current.id; return; }
+  });
+
+  route();
+})();
+</script>
+</body>
+</html>

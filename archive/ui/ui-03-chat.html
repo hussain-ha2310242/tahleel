@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tahleel UI draft 03</title>
+<!-- Draft 03. One workflow, chat-style: objective, four confirmation blocks, complete plan with a chat panel for edits. Illustrative content only. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --paper:#F6F5F1; --card:#FFFFFF; --ink:#18181B; --mute:#6B6B70; --line:#DCDAD2; --fill:#ECEAE3; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; height:100%; background:var(--paper); color:var(--ink); font-family:'Inter', system-ui, sans-serif; font-size:14px; line-height:1.55; -webkit-font-smoothing:antialiased; }
+  button, textarea, input, select { font:inherit; color:inherit; }
+  button { cursor:pointer; }
+  .serif { font-family:'Fraunces', Georgia, serif; font-weight:400; letter-spacing:-0.01em; margin:0; }
+  .mute { color:var(--mute); }
+  .small { font-size:12px; }
+
+  .app { display:grid; grid-template-columns:232px 1fr; height:100vh; }
+  aside { background:var(--card); border-right:1px solid var(--line); padding:20px 14px; display:flex; flex-direction:column; gap:10px; overflow-y:auto; }
+  .brand { font-family:'Fraunces', Georgia, serif; font-size:22px; padding:2px 8px 10px; }
+  .new { border:1px solid var(--line); background:var(--card); padding:9px 12px; border-radius:10px; text-align:left; font-weight:500; }
+  .new:hover { background:var(--fill); }
+  .label { font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--mute); padding:12px 8px 0; }
+  .recent { display:flex; flex-direction:column; gap:8px; }
+  .rc { text-align:left; background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:10px 12px; display:flex; flex-direction:column; gap:3px; transition:background-color .2s ease; }
+  .rc:hover { background:var(--fill); }
+  .rc.on { border-color:var(--ink); }
+  .rc b { font-size:13px; font-weight:600; }
+  .rc .meta { display:flex; justify-content:space-between; gap:8px; align-items:center; font-size:12px; color:var(--mute); }
+  .type { font-size:11px; border:1px solid var(--ink); border-radius:999px; padding:0 7px; color:var(--ink); white-space:nowrap; }
+
+  main { overflow-y:auto; min-width:0; }
+
+  .btn { border:1px solid var(--ink); background:var(--ink); color:var(--paper); padding:8px 14px; border-radius:999px; font-weight:500; transition:transform .15s ease, opacity .15s ease; }
+  .btn:hover { transform:translateY(-1px); }
+  .ghost { border:1px solid var(--line); background:var(--card); padding:8px 14px; border-radius:999px; transition:background-color .15s ease; }
+  .ghost:hover { background:var(--fill); }
+  .link { border:0; background:none; padding:0; text-decoration:underline; text-underline-offset:3px; color:var(--ink); }
+  .tool { border:1px solid var(--line); background:var(--card); padding:7px 12px; border-radius:999px; transition:background-color .15s ease; }
+  .tool:hover { background:var(--fill); }
+  .tool.dark { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .chip { border:1px solid var(--line); background:var(--card); border-radius:999px; padding:5px 12px; font-size:13px; transition:background-color .15s ease; text-align:left; }
+  .chip:hover { background:var(--fill); }
+
+  .home { max-width:640px; margin:12vh auto 0; padding:0 24px; }
+  .home h1 { font-size:40px; line-height:1.1; }
+  .sub { color:var(--mute); margin:10px 0 24px; }
+  .composer { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px 18px; transition:border-color .2s ease, box-shadow .2s ease; }
+  .composer:focus-within { border-color:var(--ink); box-shadow:0 0 0 3px rgba(24,24,27,.06); }
+  .composer textarea { width:100%; min-height:88px; border:0; outline:none; resize:none; background:transparent; font-size:16px; }
+  .composer .bar { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:8px; }
+  .home .chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+
+  .flow { max-width:680px; margin:0 auto; padding:40px 24px 80px; }
+  .you { margin-left:auto; max-width:82%; background:var(--ink); color:var(--paper); border-radius:18px 18px 4px 18px; padding:10px 14px; width:fit-content; }
+  .msg { margin:22px 0 0; }
+  .lead { color:var(--mute); margin:0 0 10px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px 20px; }
+  .ct { font-size:12px; letter-spacing:.05em; text-transform:uppercase; color:var(--mute); margin-bottom:8px; }
+  .val { margin:0 0 8px; }
+  .acts { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; }
+  .ok { display:flex; align-items:center; gap:10px; flex-wrap:wrap; color:var(--mute); padding:4px 0; }
+  .ok b { color:var(--ink); font-weight:600; }
+  .tick { width:18px; height:18px; border-radius:50%; background:var(--ink); color:var(--paper); display:inline-flex; align-items:center; justify-content:center; font-size:11px; }
+  .box { width:100%; min-height:96px; border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:var(--paper); resize:vertical; outline:none; line-height:1.6; }
+  .box.short { min-height:64px; margin-top:10px; }
+  .box:focus, .cname:focus { border-color:var(--ink); }
+  .picks { display:flex; gap:8px; flex-wrap:wrap; }
+  .pick { border:1px solid var(--line); background:var(--card); border-radius:999px; padding:5px 12px; font-size:13px; }
+  .pick.on { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .crow { display:flex; justify-content:space-between; gap:12px; padding:8px 0; border-top:1px solid var(--line); }
+  .crow:first-child { border-top:0; padding-top:0; }
+  .cb { border-top:1px solid var(--line); padding:12px 0; }
+  .cb:first-child { border-top:0; padding-top:0; }
+  .cbh { display:flex; gap:10px; align-items:center; margin-bottom:8px; }
+  .cname { flex:1; border:1px solid var(--line); border-radius:8px; padding:6px 10px; background:var(--paper); outline:none; font-weight:600; }
+  .score { display:flex; align-items:baseline; gap:12px; margin-bottom:12px; }
+  .score .num { font-family:'Fraunces', Georgia, serif; font-size:44px; line-height:1; }
+  .flag { border-top:1px solid var(--line); padding:10px 0; display:flex; flex-direction:column; gap:3px; }
+  .flag:first-of-type { border-top:0; padding-top:0; }
+  .flag b { font-weight:600; }
+  .flag small { color:var(--mute); }
+  .flag .link { align-self:flex-start; margin-top:4px; }
+  .foot { font-size:12px; margin-top:28px; text-align:center; }
+
+  .ptop { padding:18px 28px 14px; border-bottom:1px solid var(--line); background:var(--paper); }
+  .pt h1 { font-size:24px; line-height:1.2; margin-top:2px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .tools { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:12px; }
+  .formgen { display:flex; gap:6px; align-items:center; }
+  .formgen select { border:1px solid var(--line); background:var(--card); border-radius:999px; padding:6px 10px; }
+  .seg { display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden; background:var(--card); }
+  .seg button { border:0; background:none; padding:6px 12px; }
+  .seg button.on { background:var(--ink); color:var(--paper); }
+  .qpill { margin-left:auto; border:1px solid var(--ink); border-radius:999px; padding:6px 12px; }
+  .note { margin-top:10px; font-size:12px; color:var(--mute); }
+  .pgrid { display:grid; grid-template-columns:1fr 340px; height:calc(100vh - 120px); }
+  .doc { overflow-y:auto; padding:28px 40px 60px; }
+  .doc.rtl { direction:rtl; text-align:right; }
+  .sec { padding:18px 0; border-top:1px solid var(--line); transition:box-shadow .25s ease, padding-inline-start .25s ease; }
+  .sec:first-child { border-top:0; padding-top:0; }
+  .sec:hover { box-shadow:inset 2px 0 0 var(--ink); padding-inline-start:12px; }
+  .sec h3 { font-size:20px; margin-bottom:8px; }
+  .sec-h { font-weight:600; margin:12px 0 4px; }
+  .qs { margin:0; padding:0; list-style:none; }
+  .qs li { padding:6px 0; border-top:1px solid var(--fill); }
+  .qs li:first-child { border-top:0; }
+  .qn { color:var(--mute); font-size:12px; margin-inline-end:6px; }
+  .chatp { border-left:1px solid var(--line); background:var(--card); display:flex; flex-direction:column; min-height:0; }
+  .chh { padding:16px 18px; border-bottom:1px solid var(--line); font-weight:600; }
+  .chm { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:8px; }
+  .bub { max-width:88%; padding:9px 12px; border-radius:14px; font-size:13px; line-height:1.5; }
+  .bub.bot { background:var(--paper); border:1px solid var(--line); align-self:flex-start; }
+  .bub.me { background:var(--ink); color:var(--paper); align-self:flex-end; }
+  .sugg { display:flex; flex-wrap:wrap; gap:6px; padding:0 16px 10px; }
+  .sugg .chip { font-size:12px; padding:4px 10px; }
+  .chf { display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--line); }
+  .chf input { flex:1; border:1px solid var(--line); border-radius:999px; padding:8px 14px; background:var(--paper); outline:none; }
+  .chf input:focus { border-color:var(--ink); }
+
+  .scrim { position:fixed; inset:0; background:rgba(24,24,27,.22); display:flex; align-items:center; justify-content:center; padding:20px; z-index:10; animation:fade .2s ease both; }
+  .modal { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:22px; width:min(460px,100%); }
+  .modal h2 { font-size:24px; margin-bottom:10px; }
+  .check { list-style:none; padding:0; margin:0 0 14px; }
+  .check li { display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-top:1px solid var(--line); }
+  .check li:first-child { border-top:0; }
+
+  .enter { animation:rise .45s ease both; }
+  .sec.enter { animation:rise .5s ease both; animation-delay:var(--d, 0ms); }
+  @keyframes rise { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+  @keyframes fade { from { opacity:0; } to { opacity:1; } }
+  @media (max-width: 900px) {
+    .app { grid-template-columns:1fr; height:auto; }
+    aside { border-right:0; border-bottom:1px solid var(--line); }
+    .pgrid { grid-template-columns:1fr; height:auto; }
+    .chatp { border-left:0; border-top:1px solid var(--line); }
+    .doc { padding:22px 18px; }
+    .qpill { margin-left:0; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before { animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand">Tahleel</div>
+    <button class="new" data-act="new">+ New</button>
+    <div class="label">Recent</div>
+    <div class="recent" id="recent"></div>
+  </aside>
+  <main id="main"></main>
+</div>
+
+<script>
+(function () {
+  var DEF = {
+    population: 'Students at one university who have worked on a project in the past year, undergraduate and postgraduate.',
+    sampling: 'Stratified random sample by college and study level.',
+    n: 356,
+    constructs: [
+      { name:'AI use', qs:['In the past month, how often did you use AI tools for your university projects?','Which project tasks have you used AI tools for?'] },
+      { name:'Perceived usefulness', qs:['AI tools help me finish project tasks more quickly.','Don\'t you agree that AI tools make university projects easier?'] },
+      { name:'Trust and accuracy', qs:['I trust the answers AI tools give me for academic work.','I check AI-generated content before using it in a project.'] },
+      { name:'Integrity and concerns', qs:['I am worried about breaking academic integrity rules when I use AI.'] },
+      { name:'Guidance and support', qs:['My university gives clear guidance on AI use in projects.'] }
+    ]
+  };
+  var DESIGNS = { survey:'Cross-sectional survey', prepost:'Pre/post survey with a comparison group', experiment:'Randomised experiment' };
+  var STEPS = ['population','design','constructs','quality'];
+  var TITLES = { population:'Target population', design:'Sampling and design', constructs:'Constructs and questions', quality:'Questionnaire quality' };
+  var PROMPTS = {
+    population:'Here is the target population I would start with. Keep it or edit it.',
+    design:'A simple starting design. Choose the design and the sampling approach.',
+    constructs:'These are the constructs I suggest. Edit names and sub-questions, or add and remove any.',
+    quality:'I checked every question for wording problems. Apply the suggested rewrites, then generate the plan.'
+  };
+  var SAMPLES = ['understanding AI usage for projects in university','satisfaction with campus transport among students','burnout among nursing students in clinical placements'];
+  var FORMS = [ { v:'tahleel', l:'Tahleel form (default)' }, { v:'google', l:'Google Forms' }, { v:'ms', l:'Microsoft Forms' } ];
+  var AR = { 'Plan':'الخطة', 'Objective':'الهدف', 'Target population':'المجتمع المستهدف', 'Design and sampling':'التصميم والعينة', 'Constructs and questions':'المحاور والأسئلة', 'Quality':'جودة الاستبيان', 'Ethics':'أخلاقيات البحث' };
+
+  var sessions = [];
+  var S = null;
+  var seen = {};
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function clone(x) { return JSON.parse(JSON.stringify(x)); }
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  function shorten(s, n) { n = n || 40; return s.length > n ? s.slice(0, n).trim() + '…' : s; }
+  function enter(key) { var id = S.id + ':' + key; if (seen[id]) return ''; seen[id] = true; return ' enter'; }
+
+  function checkLine(line) {
+    var t = line.trim(), f = [];
+    if (!t) return f;
+    if (/\b(and|or)\b/i.test(t) && /\?/.test(t) && t.split(/\b(and|or)\b/i).length > 2) f.push({ t:'Double-barrelled', d:'Two ideas joined by "and" or "or". Suggested: split into two questions.' });
+    if (/don'?t you|obviously|unfortunately|most people/i.test(t)) f.push({ t:'Leading', d:'Loaded wording. Suggested: ask the neutral form.' });
+    if (t.split(/\s+/).length > 25) f.push({ t:'Long', d:'More than 25 words. Suggested: shorten.' });
+    return f;
+  }
+  function rewrite(q) {
+    var m = q.match(/^Don'?t you agree that (.*)\?$/i);
+    if (m) return 'To what extent do you think ' + m[1].charAt(0).toLowerCase() + m[1].slice(1) + '?';
+    return null;
+  }
+  function qRows() {
+    var rows = [];
+    S.constructs.forEach(function (c, ci) {
+      c.qs.forEach(function (q, qi) { if (q.trim()) rows.push({ ci:ci, qi:qi, c:c.name, q:q, flags:checkLine(q) }); });
+    });
+    return rows;
+  }
+  function score() {
+    var rows = qRows(), bad = rows.filter(function (r) { return r.flags.length; }).length;
+    return rows.length ? Math.round(100 * (rows.length - bad) / rows.length) : 0;
+  }
+
+  function newSession(obj) {
+    return { id:'s' + Date.now() + Math.random().toString(36).slice(2, 6), objective:obj, name:shorten(obj), view:'flow', step:'population',
+      done:{}, editing:null, population:DEF.population, sampling:DEF.sampling, design:'survey', constructs:clone(DEF.constructs),
+      lang:'en', form:'tahleel', formNote:'', modal:null, modalNote:'',
+      chat:[{ role:'t', text:'The plan is ready. Ask for changes here, for example: add a construct on trust.' }] };
+  }
+  function demoSession() {
+    var s = newSession('Understanding AI usage for projects in university');
+    s.name = 'Demo: AI use in university'; s.view = 'plan'; s.step = 'done';
+    STEPS.forEach(function (k) { s.done[k] = true; });
+    return s;
+  }
+
+  function summary(k) {
+    if (k === 'population') return shorten(S.population, 70);
+    if (k === 'design') return DESIGNS[S.design] + ' · ' + shorten(S.sampling, 40);
+    if (k === 'constructs') {
+      var q = S.constructs.reduce(function (a, c) { return a + c.qs.filter(function (x) { return x.trim(); }).length; }, 0);
+      return S.constructs.length + ' constructs, ' + q + ' questions';
+    }
+    return 'Quality ' + score() + ' of 100';
+  }
+
+  function body(k, editing) {
+    if (k === 'population') {
+      return editing ? '<textarea class="box" data-bind="population">' + esc(S.population) + '</textarea>'
+                     : '<p class="val">' + esc(S.population) + '</p>';
+    }
+    if (k === 'design') {
+      if (editing) {
+        return '<div class="picks">' + Object.keys(DESIGNS).map(function (v) {
+          return '<button class="pick' + (S.design === v ? ' on' : '') + '" data-act="design" data-v="' + v + '">' + DESIGNS[v] + '</button>';
+        }).join('') + '</div><textarea class="box short" data-bind="sampling">' + esc(S.sampling) + '</textarea>';
+      }
+      return '<p class="val"><b>Design</b> ' + DESIGNS[S.design] + '</p><p class="val"><b>Sampling</b> ' + esc(S.sampling) +
+             '</p><p class="val"><b>Target</b> about ' + DEF.n + ' responses <span class="mute">(illustrative, needs statistician review)</span></p>';
+    }
+    if (k === 'constructs') {
+      if (editing) {
+        return S.constructs.map(function (c, i) {
+          return '<div class="cb"><div class="cbh"><input class="cname" data-cname="' + i + '" value="' + esc(c.name) + '">' +
+                 '<button class="link" data-act="cdel" data-i="' + i + '">Remove</button></div>' +
+                 '<textarea class="box" data-cqs="' + i + '">' + esc(c.qs.join('\n')) + '</textarea></div>';
+        }).join('') + '<div style="margin-top:12px"><button class="ghost" data-act="cadd">Add construct</button></div>';
+      }
+      return S.constructs.map(function (c) {
+        return '<div class="crow"><b>' + esc(c.name) + '</b><span class="mute">' + c.qs.filter(function (x) { return x.trim(); }).length + ' questions</span></div>';
+      }).join('');
+    }
+    var rows = qRows(), bad = rows.filter(function (r) { return r.flags.length; });
+    var head = '<div class="score"><span class="num">' + score() + '</span><span class="mute">out of 100 · ' + rows.length + ' questions checked, ' + bad.length + ' flagged</span></div>';
+    if (!bad.length) return head + '<p class="val">No flags.</p>';
+    return head + bad.map(function (r) {
+      return '<div class="flag"><b>' + esc(r.c) + ' · Q' + (r.qi + 1) + '</b><small>' + esc(r.q) + '</small>' +
+        r.flags.map(function (f) { return '<small><em>' + f.t + ':</em> ' + esc(f.d) + '</small>'; }).join('') +
+        (rewrite(r.q) ? '<button class="link" data-act="fix" data-ci="' + r.ci + '" data-qi="' + r.qi + '">Apply suggested rewrite</button>' : '') + '</div>';
+    }).join('');
+  }
+
+  function actions(k, editing) {
+    if (editing) return '<button class="btn" data-act="save" data-k="' + k + '">Save</button>';
+    var edit = k === 'quality' ? '' : '<button class="ghost" data-act="edit" data-k="' + k + '">Edit</button>';
+    return edit + '<button class="btn" data-act="next" data-k="' + k + '">' + (k === 'quality' ? 'Generate plan' : 'Next') + '</button>';
+  }
+
+  function stepBlock(k) {
+    var idx = STEPS.indexOf(k);
+    var cur = S.step === 'done' ? STEPS.length : STEPS.indexOf(S.step);
+    if (idx > cur) return '';
+    var cls = enter('b:' + k);
+    if (S.done[k] && S.editing !== k) {
+      var edit = k === 'quality' ? '' : '<button class="link" data-act="edit" data-k="' + k + '">Edit</button>';
+      return '<div class="msg t' + cls + '"><div class="ok"><span class="tick">✓</span><b>' + TITLES[k] + '</b><span>' + esc(summary(k)) + '</span>' + edit + '</div></div>';
+    }
+    var editing = S.editing === k;
+    return '<div class="msg t' + cls + '"><p class="lead">' + PROMPTS[k] + '</p><div class="card"><div class="ct">' + TITLES[k] + '</div>' +
+           body(k, editing) + '<div class="acts">' + actions(k, editing) + '</div></div></div>';
+  }
+
+  function homeHTML() {
+    return '<div class="home"><h1 class="serif">What is your research objective?</h1>' +
+      '<p class="sub">Write it in one sentence. Tahleel proposes the population, design, questions and quality checks. You confirm each one.</p>' +
+      '<form class="composer" id="composer"><textarea id="obj" placeholder="For example: understanding AI usage for projects in university"></textarea>' +
+      '<div class="bar"><span class="mute small">Enter to start · Shift+Enter for a new line</span><button class="btn" type="submit">Start</button></div></form>' +
+      '<div class="chips">' + SAMPLES.map(function (q) { return '<button class="chip" data-act="sample" data-q="' + esc(q) + '">' + esc(q) + '</button>'; }).join('') + '</div></div>';
+  }
+
+  function flowHTML() {
+    return '<div class="flow"><div class="you' + enter('obj') + '">' + esc(S.objective) + '</div>' +
+      STEPS.map(stepBlock).join('') +
+      '<p class="foot mute">Confirm each step to continue. You can change any step later.</p></div>';
+  }
+
+  function planHTML() {
+    var L = S.lang === 'ar';
+    var lab = function (en) { return L && AR[en] ? AR[en] : en; };
+    var rows = qRows(), n = 0;
+    var constructsHTML = S.constructs.map(function (c) {
+      var qs = c.qs.filter(function (x) { return x.trim(); });
+      return '<div class="sec-h">' + esc(c.name) + '</div><ol class="qs">' + qs.map(function (q) {
+        n++; return '<li><span class="qn">Q' + n + '</span>' + esc(q) + '</li>';
+      }).join('') + '</ol>';
+    }).join('');
+    var bad = rows.filter(function (r) { return r.flags.length; }).length;
+    var sections = [
+      [lab('Objective'), '<p class="val">' + esc(S.objective) + '</p>'],
+      [lab('Target population'), '<p class="val">' + esc(S.population) + '</p>'],
+      [lab('Design and sampling'), '<p class="val"><b>Design</b> ' + DESIGNS[S.design] + '</p><p class="val"><b>Sampling</b> ' + esc(S.sampling) + '</p><p class="val"><b>Target</b> about ' + DEF.n + ' responses (illustrative)</p>'],
+      [lab('Constructs and questions'), constructsHTML],
+      [lab('Quality'), '<p class="val">Score ' + score() + ' of 100. ' + rows.length + ' questions checked, ' + bad + ' flagged.</p>'],
+      [lab('Ethics'), '<p class="val">Standard review, to confirm with the committee. No minors or health data in this design. <button class="link" data-act="ethics">Open ethics submission</button></p>']
+    ];
+    var docHTML = sections.map(function (s, i) {
+      var cls = enter('p:' + i);
+      return '<section class="sec' + cls + '" style="--d:' + (i * 70) + 'ms"><h3 class="serif">' + (i + 1) + '. ' + s[0] + '</h3>' + s[1] + '</section>';
+    }).join('');
+    var modal = S.modal === 'ethics' ?
+      '<div class="scrim"><div class="modal" role="dialog" aria-label="Ethics submission"><h2 class="serif">Ethics submission</h2>' +
+      '<ul class="check"><li><span>Review route</span><span class="mute">Standard, to confirm</span></li>' +
+      '<li><span>Minors in sample</span><span class="mute">None</span></li>' +
+      '<li><span>Health data</span><span class="mute">None</span></li>' +
+      '<li><span>Consent text</span><span class="mute">Draft ready</span></li>' +
+      '<li><span>Data plan</span><span class="mute">Draft ready</span></li></ul>' +
+      (S.modalNote ? '<p class="note">' + esc(S.modalNote) + '</p>' : '') +
+      '<div class="acts"><button class="ghost" data-act="closemodal">Close</button><button class="btn" data-act="prepare">Prepare package</button></div></div></div>' : '';
+    return '<header class="ptop"><div class="pt"><div class="mute small">Survey plan · ' + lab('Plan') + '</div><h1 class="serif">' + esc(S.objective) + '</h1></div>' +
+      '<div class="tools"><button class="tool" data-act="ethics">Ethics submission</button>' +
+      '<div class="formgen"><select id="formsel">' + FORMS.map(function (f) { return '<option value="' + f.v + '"' + (S.form === f.v ? ' selected' : '') + '>' + f.l + '</option>'; }).join('') + '</select>' +
+      '<button class="tool dark" data-act="genform">Generate form</button></div>' +
+      '<div class="seg"><button class="' + (!L ? 'on' : '') + '" data-act="lang" data-v="en">EN</button><button class="' + (L ? 'on' : '') + '" data-act="lang" data-v="ar">عربي</button></div>' +
+      '<div class="qpill">Quality <b>' + score() + '</b></div></div>' +
+      (S.formNote ? '<div class="note">' + esc(S.formNote) + '</div>' : '') + '</header>' +
+      '<div class="pgrid"><article class="doc' + (L ? ' rtl' : '') + '">' + docHTML + '</article>' +
+      '<aside class="chatp"><div class="chh">Edit with Tahleel</div><div class="chm" id="chm">' +
+      S.chat.map(function (m) { return '<div class="bub ' + (m.role === 'u' ? 'me' : 'bot') + '">' + esc(m.text) + '</div>'; }).join('') +
+      '</div><div class="sugg">' + ['Add a construct on trust', 'Switch to Arabic', 'Shorten the questions'].map(function (t) {
+        return '<button class="chip" data-act="suggest" data-q="' + t + '">' + t + '</button>';
+      }).join('') + '</div>' +
+      '<form class="chf" id="chf"><input id="chin" placeholder="Ask for a change" autocomplete="off"><button class="btn" type="submit">Send</button></form></aside></div>' + modal;
+  }
+
+  function respond(text) {
+    var t = text.toLowerCase();
+    if (/trust/.test(t)) {
+      S.constructs.push({ name:'Trust and reliability', qs:['I trust AI tools to give accurate information for my project.','I verify AI information with another source before using it.'] });
+      return 'Added a construct on trust and reliability with two questions. You can edit them in the plan.';
+    }
+    if (/arab/.test(t)) { S.lang = 'ar'; return 'Switched the plan headings to Arabic. Question text stays in English until it is translated.'; }
+    if (/short/.test(t)) return 'Shortening is not automatic in this draft. I can flag the longest questions for you to rewrite.';
+    return 'In this draft I can add a construct, switch the headings to Arabic, or flag long questions. Other edits come in a later version.';
+  }
+
+  function sendChat(text) {
+    text = (text || '').trim();
+    if (!text) return;
+    S.chat.push({ role:'u', text:text });
+    S.chat.push({ role:'t', text:respond(text) });
+    render();
+  }
+
+  function next(k) {
+    S.done[k] = true; S.editing = null;
+    var i = STEPS.indexOf(k);
+    if (i < STEPS.length - 1) { S.step = STEPS[i + 1]; }
+    else { S.step = 'done'; S.view = 'plan'; }
+    render();
+  }
+
+  function renderRecent() {
+    $('recent').innerHTML = sessions.map(function (s) {
+      return '<button class="rc' + (S && S.id === s.id ? ' on' : '') + '" data-act="open" data-id="' + s.id + '">' +
+        '<b>' + (s.view === 'plan' ? 'Survey plan' : 'Plan in progress') + '</b>' +
+        '<span class="meta"><span>' + esc(s.name) + '</span><span class="type">Plan</span></span></button>';
+    }).join('');
+  }
+
+  function render() {
+    var main = $('main');
+    if (!S) main.innerHTML = homeHTML();
+    else if (S.view === 'flow') main.innerHTML = flowHTML();
+    else main.innerHTML = planHTML();
+    if (S && S.view === 'plan') { var c = $('chm'); if (c) c.scrollTop = c.scrollHeight; }
+    renderRecent();
+  }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-act]'); if (!t) return;
+    var a = t.dataset.act;
+    if (a === 'new') { S = null; render(); }
+    else if (a === 'sample') { var ta = $('obj'); if (ta) { ta.value = t.dataset.q; ta.focus(); } }
+    else if (a === 'open') { S = sessions.filter(function (s) { return s.id === t.dataset.id; })[0]; render(); }
+    else if (a === 'edit') { S.editing = t.dataset.k; render(); }
+    else if (a === 'save') { S.editing = null; render(); }
+    else if (a === 'next') { next(t.dataset.k); }
+    else if (a === 'design') { S.design = t.dataset.v; render(); }
+    else if (a === 'cadd') { S.constructs.push({ name:'New construct', qs:[''] }); render(); }
+    else if (a === 'cdel') { S.constructs.splice(+t.dataset.i, 1); render(); }
+    else if (a === 'fix') { var c = S.constructs[+t.dataset.ci]; var r = rewrite(c.qs[+t.dataset.qi]); if (r) c.qs[+t.dataset.qi] = r; render(); }
+    else if (a === 'ethics') { S.modal = 'ethics'; S.modalNote = ''; render(); }
+    else if (a === 'closemodal') { S.modal = null; render(); }
+    else if (a === 'prepare') { S.modalNote = 'Submission package prepared in this draft. Nothing was sent.'; render(); }
+    else if (a === 'genform') {
+      var f = FORMS.filter(function (x) { return x.v === $('formsel').value; })[0];
+      S.form = f.v;
+      S.formNote = 'Draft for ' + f.l.replace(' (default)', '') + ' ready: ' + qRows().length + ' questions. Export is not connected in this draft.';
+      render();
+    }
+    else if (a === 'lang') { S.lang = t.dataset.v; render(); }
+    else if (a === 'suggest') { sendChat(t.dataset.q); }
+  });
+
+  document.addEventListener('submit', function (e) {
+    if (e.target.id === 'composer') {
+      e.preventDefault();
+      var v = $('obj').value.trim(); if (!v) return;
+      S = newSession(cap(v));
+      sessions.unshift(S);
+      render();
+    }
+    if (e.target.id === 'chf') {
+      e.preventDefault();
+      sendChat($('chin').value);
+    }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.target.id === 'obj' && e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      $('composer').requestSubmit();
+    }
+  });
+
+  document.addEventListener('input', function (e) {
+    var t = e.target;
+    if (t.dataset.bind) S[t.dataset.bind] = t.value;
+    if (t.dataset.cname !== undefined) S.constructs[+t.dataset.cname].name = t.value;
+    if (t.dataset.cqs !== undefined) S.constructs[+t.dataset.cqs].qs = t.value.split('\n');
+  });
+
+  sessions = [demoSession()];
+  S = null;
+  render();
+})();
+</script>
+</body>
+</html>

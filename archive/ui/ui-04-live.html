@@ -1,0 +1,822 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tahleel UI draft 04</title>
+<!-- Draft 04. Desktop density. Home is one prompt. Steps show a progress bar. Plan is a live, editable document. Illustrative content only. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --paper:#F6F5F1; --card:#FFFFFF; --ink:#18181B; --mute:#6B6B70; --line:#DCDAD2; --fill:#ECEAE3; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; height:100%; background:var(--paper); color:var(--ink); font-family:'Inter', system-ui, sans-serif; font-size:13px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  button, textarea, input, select { font:inherit; color:inherit; }
+  button { cursor:pointer; }
+  .serif { font-family:'Fraunces', Georgia, serif; font-weight:400; letter-spacing:-0.01em; margin:0; }
+  .mute { color:var(--mute); }
+  .small { font-size:12px; }
+
+  .app { display:grid; grid-template-columns:232px 1fr; height:100vh; }
+  aside { background:var(--card); border-right:1px solid var(--line); padding:20px 14px; display:flex; flex-direction:column; gap:10px; overflow-y:auto; }
+  .brand { font-family:'Fraunces', Georgia, serif; font-size:22px; padding:2px 8px 10px; }
+  .new { border:1px solid var(--line); background:var(--card); padding:9px 12px; border-radius:10px; text-align:left; font-weight:500; }
+  .new:hover { background:var(--fill); }
+  .label { font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--mute); padding:12px 8px 0; }
+  .recent { display:flex; flex-direction:column; gap:2px; }
+  .rc { text-align:left; background:transparent; border:1px solid transparent; border-radius:8px; padding:6px 8px; display:flex; align-items:center; gap:8px; transition:background-color .2s ease; }
+  .rc:hover { background:var(--fill); }
+  .rc.on { background:var(--paper); border-color:var(--line); }
+  .rci { color:var(--mute); display:inline-flex; }
+  .rct { flex:1; min-width:0; font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .type { font-size:10.5px; border:1px solid var(--line); border-radius:999px; padding:0 6px; color:var(--mute); white-space:nowrap; }
+
+  main { overflow-y:auto; min-width:0; }
+
+  .btn { border:1px solid var(--ink); background:var(--ink); color:var(--paper); padding:8px 14px; border-radius:999px; font-weight:500; transition:transform .15s ease, opacity .15s ease; }
+  .btn:hover { transform:translateY(-1px); }
+  .outline { border:1px solid var(--ink); background:transparent; color:var(--ink); padding:5px 14px; border-radius:999px; font-weight:500; font-size:13px; transition:background-color .15s ease; }
+  .outline:hover { background:var(--ink); color:var(--paper); }
+  .ghost { border:1px solid var(--line); background:var(--card); padding:8px 14px; border-radius:999px; transition:background-color .15s ease; }
+  .ghost:hover { background:var(--fill); }
+  .link { border:0; background:none; padding:0; text-decoration:underline; text-underline-offset:3px; color:var(--ink); }
+  .tool { border:1px solid var(--line); background:var(--card); padding:7px 12px; border-radius:999px; transition:background-color .15s ease; }
+  .tool:hover { background:var(--fill); }
+  .tool.dark { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .chip { border:1px solid var(--line); background:var(--card); border-radius:999px; padding:5px 12px; font-size:13px; transition:background-color .15s ease; text-align:left; }
+  .chip:hover { background:var(--fill); }
+
+  .home { max-width:640px; margin:12vh auto 0; padding:0 24px; }
+  .home h1 { font-size:30px; line-height:1.15; }
+  .sub { color:var(--mute); margin:8px 0 16px; font-size:13px; }
+  .composer { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; transition:border-color .2s ease, box-shadow .2s ease; }
+  .composer:focus-within { border-color:var(--ink); box-shadow:0 0 0 3px rgba(24,24,27,.06); }
+  .composer textarea { width:100%; min-height:44px; border:0; outline:none; resize:none; background:transparent; font-size:14px; }
+  .composer .bar { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:6px; }
+
+  .flow { max-width:680px; margin:0 auto; padding:40px 24px 80px; }
+  .you { margin-left:auto; max-width:82%; background:var(--ink); color:var(--paper); border-radius:18px 18px 4px 18px; padding:10px 14px; width:fit-content; }
+  .msg { margin:22px 0 0; }
+  .lead { color:var(--mute); margin:0 0 10px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px 20px; }
+  .ct { font-size:12px; letter-spacing:.05em; text-transform:uppercase; color:var(--mute); margin-bottom:8px; }
+  .val { margin:0 0 8px; }
+  .acts { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; }
+  .ok { display:flex; align-items:center; gap:10px; flex-wrap:wrap; color:var(--mute); padding:4px 0; }
+  .ok b { color:var(--ink); font-weight:600; }
+  .tick { width:18px; height:18px; border-radius:50%; background:var(--ink); color:var(--paper); display:inline-flex; align-items:center; justify-content:center; font-size:11px; }
+  .box { width:100%; min-height:96px; border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:var(--paper); resize:vertical; outline:none; line-height:1.6; }
+  .box.short { min-height:64px; margin-top:10px; }
+  .box:focus, .cname:focus { border-color:var(--ink); }
+  .picks { display:flex; gap:8px; flex-wrap:wrap; }
+  .pick { border:1px solid var(--line); background:var(--card); border-radius:999px; padding:5px 12px; font-size:13px; }
+  .pick.on { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .crow { display:flex; justify-content:space-between; gap:12px; padding:8px 0; border-top:1px solid var(--line); }
+  .crow:first-child { border-top:0; padding-top:0; }
+  .cb { border-top:1px solid var(--line); padding:12px 0; }
+  .cb:first-child { border-top:0; padding-top:0; }
+  .cbh { display:flex; gap:10px; align-items:center; margin-bottom:8px; }
+  .cname { flex:1; border:1px solid var(--line); border-radius:8px; padding:6px 10px; background:var(--paper); outline:none; font-weight:600; }
+  .score { display:flex; align-items:baseline; gap:12px; margin-bottom:12px; }
+  .score .num { font-family:'Fraunces', Georgia, serif; font-size:44px; line-height:1; }
+  .flag { border-top:1px solid var(--line); padding:10px 0; display:flex; flex-direction:column; gap:3px; }
+  .flag:first-of-type { border-top:0; padding-top:0; }
+  .flag b { font-weight:600; }
+  .flag small { color:var(--mute); }
+  .flag .link { align-self:flex-start; margin-top:4px; }
+  .foot { font-size:12px; margin-top:28px; text-align:center; }
+
+  .ptop { padding:18px 28px 14px; border-bottom:1px solid var(--line); background:var(--paper); }
+  .pt h1 { font-size:24px; line-height:1.2; margin-top:2px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .tools { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:12px; }
+  .formgen { display:flex; gap:6px; align-items:center; }
+  .formgen select { border:1px solid var(--line); background:var(--card); border-radius:999px; padding:6px 10px; }
+  .seg { display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden; background:var(--card); }
+  .seg button { border:0; background:none; padding:6px 12px; }
+  .seg button.on { background:var(--ink); color:var(--paper); }
+  .qpill { margin-left:auto; border:1px solid var(--ink); border-radius:999px; padding:6px 12px; }
+  .note { margin-top:10px; font-size:12px; color:var(--mute); }
+  .pgrid { display:grid; grid-template-columns:1fr 340px; height:calc(100vh - 120px); }
+  .doc { overflow-y:auto; padding:28px 40px 60px; }
+  .doc.rtl { direction:rtl; text-align:right; }
+  .sec { padding:18px 0; border-top:1px solid var(--line); transition:box-shadow .25s ease, padding-inline-start .25s ease; }
+  .sec:first-child { border-top:0; padding-top:0; }
+  .sec:hover { box-shadow:inset 2px 0 0 var(--ink); padding-inline-start:12px; }
+  .sec h3 { font-size:20px; margin-bottom:8px; }
+  .sec-h { font-weight:600; margin:12px 0 4px; }
+  .qs { margin:0; padding:0; list-style:none; }
+  .qs li { padding:6px 0; border-top:1px solid var(--fill); }
+  .qs li:first-child { border-top:0; }
+  .qn { color:var(--mute); font-size:12px; margin-inline-end:6px; }
+  .chatp { border-left:1px solid var(--line); background:var(--card); display:flex; flex-direction:column; min-height:0; }
+  .chh { padding:16px 18px; border-bottom:1px solid var(--line); font-weight:600; }
+  .chm { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:8px; }
+  .bub { max-width:88%; padding:9px 12px; border-radius:14px; font-size:13px; line-height:1.5; }
+  .bub.bot { background:var(--paper); border:1px solid var(--line); align-self:flex-start; }
+  .bub.me { background:var(--ink); color:var(--paper); align-self:flex-end; }
+  .sugg { display:flex; flex-wrap:wrap; gap:6px; padding:0 16px 10px; }
+  .sugg .chip { font-size:12px; padding:4px 10px; }
+  .chf { display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--line); }
+  .chf input { flex:1; border:1px solid var(--line); border-radius:999px; padding:8px 14px; background:var(--paper); outline:none; }
+  .chf input:focus { border-color:var(--ink); }
+
+  .scrim { position:fixed; inset:0; background:rgba(24,24,27,.22); display:flex; align-items:center; justify-content:center; padding:20px; z-index:10; animation:fade .2s ease both; }
+  .modal { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:22px; width:min(460px,100%); }
+  .modal h2 { font-size:24px; margin-bottom:10px; }
+  .check { list-style:none; padding:0; margin:0 0 14px; }
+  .check li { display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-top:1px solid var(--line); }
+  .check li:first-child { border-top:0; }
+
+  .enter { animation:rise .45s ease both; }
+  .sec.enter { animation:rise .5s ease both; animation-delay:var(--d, 0ms); }
+  @keyframes rise { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+  @keyframes fade { from { opacity:0; } to { opacity:1; } }
+  @media (max-width: 900px) {
+    .app { grid-template-columns:1fr; height:auto; }
+    aside { border-right:0; border-bottom:1px solid var(--line); }
+    .pgrid { grid-template-columns:1fr; height:auto; }
+    .chatp { border-left:0; border-top:1px solid var(--line); }
+    .doc { padding:22px 18px; }
+    .qpill { margin-left:0; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before { animation:none !important; transition:none !important; } }
+  /* Draft 04 additions: density, progress, prompt bars, tags, icons, live plan */
+  .iconbtn { border:1px solid transparent; background:transparent; color:var(--mute); width:26px; height:26px; border-radius:7px; display:inline-flex; align-items:center; justify-content:center; gap:5px; transition:background-color .15s ease, color .15s ease; }
+  .iconbtn:hover { background:var(--fill); color:var(--ink); }
+  .iconbtn.sm { width:22px; height:22px; }
+  .iconbtn.lbl { width:auto; padding:0 9px; border-color:var(--line); background:var(--card); color:var(--ink); font-size:12px; height:28px; }
+  .iconbtn.dark { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .iconbtn.dark:hover { background:var(--ink); color:var(--paper); opacity:.9; }
+  .small { font-size:12px; }
+  .link.small { font-size:12px; display:inline-flex; align-items:center; gap:4px; }
+  .ci { color:var(--mute); display:inline-flex; }
+  .grow { flex:1; }
+
+  .prog { position:sticky; top:0; z-index:2; background:var(--paper); padding:14px 24px 10px; border-bottom:1px solid var(--line); }
+  .prog .progbar { height:2px; background:var(--line); border-radius:2px; overflow:hidden; margin:0 0 8px; }
+  .prog .progbar i { display:block; height:100%; background:var(--ink); transition:width .45s cubic-bezier(.2,.7,.2,1); }
+  .progsteps { display:flex; gap:14px; font-size:12px; color:var(--mute); }
+  .ps { display:inline-flex; align-items:center; gap:5px; transition:color .3s ease; }
+  .ps b { font-weight:600; width:16px; height:16px; border-radius:50%; border:1px solid var(--line); display:inline-flex; align-items:center; justify-content:center; font-size:10px; }
+  .ps.done { color:var(--ink); }
+  .ps.done svg { width:12px; height:12px; }
+  .ps.cur { color:var(--ink); font-weight:600; }
+  .ps.cur b { border-color:var(--ink); background:var(--ink); color:var(--paper); }
+
+  .flow { max-width:640px; margin:0 auto; padding:22px 24px 64px; }
+  .msg { margin:16px 0 0; }
+  .lead { font-size:12.5px; margin:0 0 8px; }
+  .card { padding:14px 16px; border-radius:12px; transition:box-shadow .3s ease; }
+  .card:hover { box-shadow:0 1px 0 rgba(24,24,27,.04), 0 6px 16px -10px rgba(24,24,27,.18); }
+  .ct { display:flex; align-items:center; gap:7px; font-size:11px; margin-bottom:10px; }
+  .ok { font-size:13px; padding:2px 0; }
+  .tick { width:16px; height:16px; }
+  .acts { margin-top:10px; gap:6px; }
+  .ghost, .outline, .btn { padding:5px 12px; font-size:12.5px; }
+  .outline { border:1px solid var(--ink); background:transparent; color:var(--ink); padding:5px 12px; border-radius:999px; font-weight:500; font-size:12.5px; transition:background-color .15s ease, color .15s ease; }
+  .outline:hover { background:var(--ink); color:var(--paper); }
+  .ghost { display:inline-flex; align-items:center; gap:5px; }
+  .sbar { display:flex; gap:6px; align-items:center; margin-top:12px; padding-top:12px; border-top:1px dashed var(--line); }
+  .sbar input { flex:1; min-width:0; border:1px solid var(--line); background:var(--paper); border-radius:999px; padding:5px 12px; font-size:12.5px; outline:none; transition:border-color .2s ease; }
+  .sbar input:focus { border-color:var(--ink); }
+  .sbar .ghost { padding:4px 10px; font-size:12px; }
+  .sbar .outline { padding:4px 12px; font-size:12px; }
+
+  .tags { display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 8px; }
+  .tag { display:inline-flex; align-items:center; gap:5px; border:1px solid var(--line); background:var(--paper); border-radius:999px; padding:2px 9px 2px 7px; font-size:12px; color:var(--ink); white-space:nowrap; }
+  .tag svg { color:var(--mute); }
+  .tag.warn { border-color:var(--ink); margin-left:8px; font-size:10.5px; padding:0 7px; color:var(--ink); }
+  .val { font-size:13px; margin:0 0 6px; }
+  .note { font-size:12px; color:var(--mute); margin:8px 0 0; }
+  .fld { display:flex; flex-direction:column; gap:4px; }
+  .fl { display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--mute); }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px 14px; }
+  .fld select, select.mini, .kv select { border:1px solid var(--line); background:var(--paper); border-radius:8px; padding:4px 8px; font-size:12.5px; outline:none; width:100%; transition:border-color .2s ease; }
+  .fld select:focus, .kv select:focus { border-color:var(--ink); }
+  select.mini { width:auto; border-radius:999px; height:28px; padding:0 10px; background:var(--card); }
+  .step { display:inline-flex; align-items:center; border:1px solid var(--line); border-radius:999px; background:var(--paper); width:fit-content; overflow:hidden; }
+  .step button { border:0; background:transparent; width:26px; height:24px; color:var(--ink); }
+  .step button:hover { background:var(--fill); }
+  .step span { min-width:44px; text-align:center; font-size:12.5px; font-variant-numeric:tabular-nums; }
+  .picks { gap:6px; margin-top:6px; }
+  .pick { padding:3px 10px; font-size:12px; transition:background-color .15s ease, color .15s ease; }
+  .tiles { display:grid; grid-template-columns:repeat(5, 1fr); gap:8px; margin-top:6px; }
+  .tile { border:1px solid var(--line); background:var(--paper); border-radius:10px; padding:10px 6px; display:flex; flex-direction:column; align-items:center; gap:6px; font-size:11.5px; transition:background-color .2s ease, border-color .2s ease, transform .2s ease; }
+  .tile:hover { transform:translateY(-1px); border-color:var(--ink); }
+  .tile.on { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .cb { border-top:1px solid var(--line); padding:10px 0; }
+  .cb:first-child { border-top:0; padding-top:0; }
+  .cbh { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+  .cname { flex:1; border:1px solid var(--line); border-radius:8px; padding:4px 8px; background:var(--paper); font-weight:600; font-size:13px; }
+  .cdesc { width:100%; border:1px solid var(--line); border-radius:8px; padding:4px 8px; background:var(--paper); font-size:12.5px; outline:none; }
+  .cdescp { margin:0 0 6px 21px; font-size:12.5px; color:var(--mute); }
+  .qs li { padding:5px 0; font-size:12.5px; }
+  .qn { font-size:11px; }
+  .regen { margin:6px 0 0 21px; }
+  .flag { border-top:1px solid var(--line); padding:8px 0; gap:2px; }
+  .flag b { font-size:12.5px; }
+  .flag small { font-size:12px; }
+  .qtext { font-style:italic; }
+  .fsum { display:flex; align-items:baseline; gap:10px; margin-bottom:8px; }
+  .fsum .num { font-family:'Fraunces', Georgia, serif; font-size:30px; line-height:1; }
+  .fsec { margin-top:10px; }
+  .fh { display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--mute); text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }
+  .fh.ok-c { color:var(--ink); }
+  .fx { display:flex; flex-direction:column; font-size:12.5px; padding:5px 0; border-top:1px solid var(--line); }
+  .fx s { color:var(--mute); }
+
+  .ptop { padding:10px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .ptl { display:flex; flex-direction:column; min-width:0; }
+  .ptl .small { display:flex; align-items:center; gap:5px; }
+  .ptitle { font-family:'Fraunces', Georgia, serif; font-size:19px; line-height:1.2; outline:none; border-radius:4px; padding:0 2px; }
+  .ptitle:focus, .pbig:focus, .pcn:focus, .pcd:focus, .qt:focus, .pop-live:focus { background:var(--card); box-shadow:0 0 0 2px var(--fill); }
+  .ptr { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .pill { display:inline-flex; align-items:center; gap:5px; font-size:12px; border:1px solid var(--line); border-radius:999px; padding:3px 9px; background:var(--card); }
+  .seg button svg { vertical-align:-2px; margin-right:3px; }
+  .pgrid { height:calc(100vh - 62px); }
+  .doc { padding:18px 28px 60px; }
+  .sec { padding:14px 0; }
+  .sh { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .sn { font-size:11px; width:18px; height:18px; border-radius:50%; background:var(--fill); display:inline-flex; align-items:center; justify-content:center; color:var(--mute); }
+  .sec h3 { font-size:15px; margin:0; font-family:'Inter', system-ui, sans-serif; font-weight:600; letter-spacing:0; }
+  .pbig { display:block; font-family:'Fraunces', Georgia, serif; font-size:18px; line-height:1.35; outline:none; border-radius:4px; padding:2px 4px; margin:0 -4px; }
+  .pgrid2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .kv { display:flex; align-items:center; gap:6px; border:1px solid var(--line); border-radius:8px; padding:4px 8px; background:var(--card); font-size:12.5px; color:var(--mute); }
+  .kv select { border:0; background:transparent; padding:0; }
+  .kv span { white-space:nowrap; }
+  [contenteditable] { cursor:text; }
+  .pc { border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-top:8px; background:var(--card); transition:border-color .2s ease; }
+  .pc:hover { border-color:#c9c7bd; }
+  .pch { display:flex; align-items:center; gap:6px; }
+  .pcn { flex:0 1 auto; font-weight:600; font-size:13px; outline:none; border-radius:4px; padding:0 3px; }
+  .pcd { font-size:12.5px; color:var(--mute); outline:none; border-radius:4px; padding:1px 3px; margin:2px 0 4px 19px; }
+  .pc .qs li { align-items:center; }
+  .qt { flex:1; outline:none; border-radius:4px; padding:1px 3px; }
+  .pc .qs li .iconbtn { opacity:0; transition:opacity .15s ease; }
+  .pc .qs li:hover .iconbtn { opacity:1; }
+  .addq { margin:4px 0 0 19px; }
+  .pc .qs { margin-left:0; }
+  .chatp .chh { font-size:13px; display:flex; align-items:center; gap:6px; padding:12px 14px; }
+  .chm { padding:12px; }
+  .bub { font-size:12.5px; }
+  .chf { padding:10px 12px; gap:6px; align-items:center; }
+  .chf input { font-size:12.5px; padding:6px 12px; flex:1 1 0; width:0; min-width:0; }
+  .ok .link { margin-left:auto; }
+  .ok { flex-wrap:nowrap; }
+  .ok > b { white-space:nowrap; }
+  .ok > span:nth-of-type(2) { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .chf .outline { padding:5px 12px; flex:none; }
+  .chf .iconbtn.lbl { flex:none; }
+  .flow .you { font-size:13px; padding:8px 12px; }
+  @keyframes pop { from { opacity:0; transform:scale(.98); } to { opacity:1; transform:none; } }
+  .tile, .tag, .pick { animation:pop .25s ease both; }
+  .bub { animation:rise .25s ease both; }
+  .sec.enter { animation:rise .4s ease both; animation-delay:var(--d, 0ms); }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand">Tahleel</div>
+    <button class="new" data-act="new">+ New</button>
+    <div class="label">Recent</div>
+    <div class="recent" id="recent"></div>
+  </aside>
+  <main id="main"></main>
+</div>
+
+<script>
+(function () {
+  var DEF = {
+    pop: { who:'Students', inst:'One university', level:'Undergraduate and postgraduate', ageMin:18, ageMax:30, region:'Qatar', criteria:['have worked on a project in the past year'], n:356 },
+    samp: 'strat', sub: 'College and study level', design: 'survey', groups: 2, waves: 2,
+    constructs: [
+      { name:'AI use', desc:'How often and for which tasks students use AI tools.', gen:true, qs:['In the past month, how often did you use AI tools for your university projects?','Which project tasks have you used AI tools for?'] },
+      { name:'Perceived usefulness', desc:'Whether AI tools help students finish project work.', gen:true, qs:['AI tools help me finish project tasks more quickly.','Don\'t you agree that AI tools make university projects easier?'] },
+      { name:'Trust and accuracy', desc:'How far students trust AI answers for academic work.', gen:true, qs:['I trust the answers AI tools give me for academic work.','I check AI-generated content before using it in a project.'] },
+      { name:'Integrity and concerns', desc:'Worry about breaking academic integrity rules.', gen:true, qs:['I am worried about breaking academic integrity rules when I use AI.'] },
+      { name:'Guidance and support', desc:'Clarity of university guidance on AI use.', gen:true, qs:['My university gives clear guidance on AI use in projects.'] }
+    ]
+  };
+  var DESIGNS = { survey:'Cross-sectional survey', prepost:'Pre/post survey with a comparison group', experiment:'Randomised experiment' };
+  var SAMP = {
+    strat:  { l:'Stratified random', i:'layers', opts:['College and study level','College only','Study level only'] },
+    simple: { l:'Simple random', i:'dice', opts:['Registrar student list'] },
+    cluster:{ l:'Cluster', i:'nodes', opts:['Course sections','Clinical placement sites'] },
+    quota:  { l:'Quota', i:'pie', opts:['Gender and study level','College'] },
+    conv:   { l:'Convenience', i:'user', opts:['Online invitation','Campus stand'] }
+  };
+  var CRIT = ['have worked on a project in the past year','are enrolled in a research methods course','are in a clinical placement'];
+  var WHO = ['Students','Nursing students','Teachers','Patients','Residents'];
+  var INST = ['One university','Two or more universities','Public schools','Clinics'];
+  var LEVEL = ['Undergraduate and postgraduate','Undergraduate only','Postgraduate only'];
+  var REGION = ['Qatar','GCC','Arab world','Other'];
+  var STEPS = ['population','design','constructs','flags'];
+  var TITLES = { population:'Target population', design:'Sampling and design', constructs:'Constructs and questions', flags:'Flags' };
+  var PROMPTS = {
+    population:'Here is the population I would start with. Set each field, or describe a different one below.',
+    design:'Choose the design and the sampling method. Each sampling option has its own refinement.',
+    constructs:'Confirm the constructs first. Questions are generated for each one after you confirm.',
+    flags:'Fix the flags that are safe to fix, then review the rest before you generate the plan.'
+  };
+  var FORMS = [ { v:'tahleel', l:'Tahleel form' }, { v:'google', l:'Google Forms' }, { v:'ms', l:'Microsoft Forms' } ];
+  var AR = { 'Plan':'الخطة', 'Objective':'الهدف', 'Target population':'المجتمع المستهدف', 'Design and sampling':'التصميم والعينة', 'Constructs and questions':'المحاور والأسئلة', 'Flags':'الملاحظات', 'Ethics':'أخلاقيات البحث' };
+  var IC = {
+    user:'<circle cx="8" cy="5.5" r="2.5"/><path d="M3 14c.8-2.6 2.6-4 5-4s4.2 1.4 5 4"/>',
+    globe:'<circle cx="8" cy="8" r="5.5"/><path d="M2.5 8h11M8 2.5c2 2.2 2 8.8 0 11M8 2.5c-2 2.2-2 8.8 0 11"/>',
+    cal:'<rect x="2.5" y="3.5" width="11" height="10" rx="1.5"/><path d="M2.5 6.5h11M5.5 2v2.5M10.5 2v2.5"/>',
+    bldg:'<path d="M3 14V3.5L8 2l5 1.5V14M3 14h10M6 6h1M9 6h1M6 9h1M9 9h1"/>',
+    layers:'<path d="M8 2 14 5 8 8 2 5z"/><path d="M2 8.5 8 11.5 14 8.5M2 11.5 8 14.5 14 11.5"/>',
+    nodes:'<circle cx="4" cy="4" r="1.6"/><circle cx="12" cy="4" r="1.6"/><circle cx="8" cy="12" r="1.6"/><path d="M5.5 4.5h5M4.8 5.4 7.2 10.6M11.2 5.4 8.8 10.6"/>',
+    dice:'<rect x="2.5" y="2.5" width="11" height="11" rx="2"/><circle cx="5.5" cy="5.5" r=".6"/><circle cx="10.5" cy="10.5" r=".6"/><circle cx="8" cy="8" r=".6"/>',
+    pie:'<circle cx="8" cy="8" r="5.5"/><path d="M8 2.5v5.5h5.5"/>',
+    flag:'<path d="M4 14V2.5M4 3h8l-2 2.5 2 2.5H4"/>',
+    check:'<path d="m3.5 8.5 3 3 6-7"/>',
+    edit:'<path d="M10.5 2.5l3 3L6 13H3v-3z"/>',
+    trash:'<path d="M3 4.5h10M6 4.5V3h4v1.5M4.5 4.5l.7 9h5.6l.7-9"/>',
+    regen:'<path d="M13 8a5 5 0 1 1-1.5-3.5M13 2.5v3h-3"/>',
+    send:'<path d="M2.5 8 13.5 3 10.5 13.5 8 9z"/>',
+    plus:'<path d="M8 3v10M3 8h10"/>',
+    doc:'<path d="M4 2h5l3 3v9H4z"/><path d="M6 8h4M6 11h4"/>',
+    fork:'<circle cx="4" cy="4" r="1.6"/><circle cx="12" cy="8" r="1.6"/><circle cx="4" cy="12" r="1.6"/><path d="M5.5 4.5 10.5 7.5M5.5 11.5l5-3"/>',
+    shield:'<path d="M8 2 13 3.5v4c0 3-2.2 5-5 6.5-2.8-1.5-5-3.5-5-6.5v-4z"/>',
+    lang:'<path d="M2.5 4h7M6 2.5V4M4 4c.5 2.5 2.5 4.5 4.5 5M8.5 13.5 11 7l2.5 6.5M9.5 11.5h3"/>'
+  };
+  var sessions = [], S = null, seen = {};
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function clone(x) { return JSON.parse(JSON.stringify(x)); }
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  function lc(s) { return /^[A-Z][a-z]/.test(s) ? s.charAt(0).toLowerCase() + s.slice(1) : s; }
+  function shorten(s, n) { n = n || 40; return s.length > n ? s.slice(0, n).trim() + '…' : s; }
+  function svg(k, n) { n = n || 14; return '<svg viewBox="0 0 16 16" width="' + n + '" height="' + n + '" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + IC[k] + '</svg>'; }
+  function enter(key) { var id = S.id + ':' + key; if (seen[id]) return ''; seen[id] = true; return ' enter'; }
+
+  function popText() {
+    if (S.popOverride) return S.popOverride;
+    var p = S.pop, c = p.criteria.length ? ' who ' + p.criteria.join(' and ') : '';
+    return p.who + ' at ' + lc(p.inst) + ', ' + lc(p.level) + ', aged ' + p.ageMin + ' to ' + p.ageMax + ' in ' + p.region + c + '.';
+  }
+  function sampText() { return SAMP[S.samp].l + ' · ' + S.sub; }
+  function rewrite(q) {
+    var m = q.match(/^Don'?t you agree that (.*)\?$/i);
+    return m ? 'To what extent do you think ' + lc(m[1]) + '?' : null;
+  }
+  function checkLine(t) {
+    var f = [];
+    if (!t.trim()) return f;
+    if (rewrite(t)) f.push({ cat:'fix', t:'Leading', d:'Loaded wording. Rewritten automatically.' });
+    else if (/\b(and|or)\b/i.test(t) && t.split(/\b(and|or)\b/i).length > 2) f.push({ cat:'review', t:'Double-barrelled', d:'Two ideas joined by "and" or "or". Split it into two questions.' });
+    if (/obviously|unfortunately|most people/i.test(t) && !rewrite(t)) f.push({ cat:'review', t:'Leading', d:'Loaded wording. Rewrite in neutral terms.' });
+    if (t.split(/\s+/).length > 25) f.push({ cat:'review', t:'Long', d:'More than 25 words. Shorten it.' });
+    return f;
+  }
+  function qRows() {
+    var rows = [];
+    S.constructs.forEach(function (c, ci) {
+      c.qs.forEach(function (q, qi) { if (q.trim()) rows.push({ ci:ci, qi:qi, c:c.name, q:q, flags:checkLine(q) }); });
+    });
+    return rows;
+  }
+  function allFlags() {
+    var out = { fixed:S.fixed || [], review:[] };
+    qRows().forEach(function (r) {
+      r.flags.filter(function (f) { return f.cat === 'review'; }).forEach(function (f) {
+        out.review.push({ title:r.c + ' · Q' + (r.qi + 1), detail:f.t + ': ' + f.d, text:r.q, ci:r.ci, qi:r.qi });
+      });
+    });
+    S.constructs.forEach(function (c) {
+      if (c.qs.filter(function (x) { return x.trim(); }).length < 2) out.review.push({ title:c.name, detail:'Reliability: one question. Use at least two or three items for a stable scale.' });
+    });
+    if (S.samp === 'conv') out.review.push({ title:'Sampling', detail:'Sampling bias: convenience sampling over-represents students who respond easily. Limits generalisation.' });
+    if (S.pop.n < 100) out.review.push({ title:'Sample size', detail:'Statistical power: under 100 responses. Small differences between groups will not be detectable.' });
+    out.review.push({ title:'Analysis wording', detail:'Statistical wording: report effect sizes with confidence intervals, not only p-values.' });
+    return out;
+  }
+  function genQs(name) {
+    var base = DEF.constructs.filter(function (c) { return c.name === name; })[0];
+    if (base) return clone(base.qs);
+    var l = lc(name);
+    return ['In the past month, how would you describe your ' + l + ' for university projects?', 'To what extent do you agree with statements about ' + l + '?'];
+  }
+  function autoFix() {
+    var fixed = [];
+    S.constructs.forEach(function (c) {
+      c.qs = c.qs.map(function (q) {
+        var r = rewrite(q);
+        if (r) fixed.push({ from:q, to:r });
+        return r || q;
+      });
+    });
+    S.fixed = fixed;
+    return fixed.length;
+  }
+  function regenConstruct(i) {
+    var c = S.constructs[i]; c.qs = genQs(c.name); c.gen = true;
+    var n = autoFix();
+    S.note = 'Regenerated questions for “' + c.name + '”' + (n ? '. Auto-fixed ' + n + ' leading wording.' : '.');
+  }
+  function regenAll() {
+    S.constructs.forEach(function (c) { if (c.gen) c.qs = genQs(c.name); });
+    var n = autoFix();
+    S.qsReady = true;
+    S.note = 'Questions regenerated. Auto-fixed ' + n + ' leading question' + (n === 1 ? '' : 's') + '.';
+  }
+  function newSession(obj) {
+    return { id:'s' + Date.now() + Math.random().toString(36).slice(2, 6), objective:obj, name:shorten(obj, 34), view:'flow', step:'population',
+      done:{}, editing:null, pop:clone(DEF.pop), popOverride:'', samp:DEF.samp, sub:DEF.sub, design:DEF.design, groups:DEF.groups, waves:DEF.waves,
+      constructs:clone(DEF.constructs), qsReady:false, fixed:[], note:'', lang:'en', form:'tahleel', formNote:'', modal:null, modalNote:'',
+      chat:[{ role:'t', text:'The plan is ready. Ask for a change here, or edit any text in the plan directly.' }] };
+  }
+  function demoSession() {
+    var s = newSession('AI use in university');
+    s.name = 'AI use in university'; s.view = 'plan'; s.step = 'done'; s.qsReady = true;
+    s.constructs.forEach(function (c) { c.gen = true; });
+    var prev = S; S = s; autoFix(); S = prev;
+    STEPS.forEach(function (k) { s.done[k] = true; });
+    return s;
+  }
+
+  var NUM = { n:[50,800,10], groups:[2,4,1], waves:[2,4,1], ageMin:[16,80,1], ageMax:[16,80,1] };
+  function tag(icon, text) { return '<span class="tag">' + svg(icon, 12) + '<span>' + esc(text) + '</span></span>'; }
+  function field(icon, label, control) { return '<div class="fld"><div class="fl">' + svg(icon, 13) + '<span>' + label + '</span></div>' + control + '</div>'; }
+  function sel(path, opts, val) {
+    return '<select data-bind="' + path + '">' + opts.map(function (o) { return '<option' + (o === val ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select>';
+  }
+  function stepper(k, val) {
+    return '<div class="step"><button data-act="num" data-k="' + k + '" data-d="-' + NUM[k][2] + '">−</button><span>' + val + '</span><button data-act="num" data-k="' + k + '" data-d="' + NUM[k][2] + '">+</button></div>';
+  }
+  function progressHTML() {
+    var n = STEPS.filter(function (k) { return S.done[k]; }).length;
+    return '<div class="prog"><div class="progbar"><i style="width:' + (n / STEPS.length * 100) + '%"></i></div><div class="progsteps">' +
+      STEPS.map(function (k, i) {
+        var cls = S.done[k] ? 'done' : (S.step === k ? 'cur' : '');
+        return '<span class="ps ' + cls + '">' + (S.done[k] ? svg('check', 12) : '<b>' + (i + 1) + '</b>') + {population:'Population',design:'Design',constructs:'Constructs',flags:'Flags'}[k] + '</span>';
+      }).join('') + '</div></div>';
+  }
+  function popBody(editing) {
+    var p = S.pop;
+    if (!editing) {
+      var t = '<div class="tags">' + tag('user', p.who) + tag('bldg', p.inst) + tag('cal', p.level) + tag('user', 'Age ' + p.ageMin + '–' + p.ageMax) +
+        tag('globe', p.region) + tag('user', p.n + ' responses');
+      if (S.design === 'prepost') t += tag('cal', p.waves || S.waves + ' waves');
+      if (S.design === 'experiment') t += tag('layers', S.groups + ' groups');
+      return '<p class="val">' + esc(popText()) + '</p>' + t + '</div>' + (S.popOverride ? '<p class="note">Custom description. Editing a field replaces it.</p>' : '');
+    }
+    var h = '<div class="grid2">' +
+      field('user', 'Who', sel('pop.who', WHO, p.who)) +
+      field('bldg', 'Institution', sel('pop.inst', INST, p.inst)) +
+      field('cal', 'Level', sel('pop.level', LEVEL, p.level)) +
+      field('globe', 'Region', sel('pop.region', REGION, p.region)) +
+      field('user', 'Age from', '<div class="step"><button data-act="num" data-k="ageMin" data-d="-1">−</button><span>' + p.ageMin + '</span><button data-act="num" data-k="ageMin" data-d="1">+</button></div>') +
+      field('user', 'Age to', '<div class="step"><button data-act="num" data-k="ageMax" data-d="-1">−</button><span>' + p.ageMax + '</span><button data-act="num" data-k="ageMax" data-d="1">+</button></div>') +
+      field('check', 'Sample size', stepper('n', p.n));
+    if (S.design === 'prepost') h += field('cal', 'Waves', stepper('waves', S.waves));
+    if (S.design === 'experiment') h += field('layers', 'Groups', stepper('groups', S.groups));
+    h += '</div><div class="fl" style="margin-top:10px">' + svg('check', 13) + '<span>Must have</span></div><div class="picks">' +
+      CRIT.map(function (c) { return '<button class="pick' + (p.criteria.indexOf(c) > -1 ? ' on' : '') + '" data-act="crit" data-v="' + esc(c) + '">' + esc(c) + '</button>'; }).join('') + '</div>';
+    return h;
+  }
+  function designBody(editing) {
+    if (!editing) {
+      return '<p class="val"><b>Design</b> ' + DESIGNS[S.design] + '</p><p class="val"><b>Sampling</b> ' + esc(sampText()) + '</p>' +
+        '<p class="mute small">Target about ' + S.pop.n + ' responses. Needs statistician review before fieldwork.</p>';
+    }
+    var dk = Object.keys(DESIGNS);
+    return '<div class="fld"><div class="fl">' + svg('doc', 13) + '<span>Study type</span></div><select data-bind="design">' +
+      dk.map(function (k) { return '<option value="' + k + '"' + (S.design === k ? ' selected' : '') + '>' + DESIGNS[k] + '</option>'; }).join('') + '</select></div>' +
+      '<div class="fl" style="margin-top:12px">' + svg('layers', 13) + '<span>Sampling</span></div><div class="tiles">' +
+      Object.keys(SAMP).map(function (k) {
+        return '<button class="tile' + (S.samp === k ? ' on' : '') + '" data-act="samp" data-v="' + k + '">' + svg(SAMP[k].i, 16) + '<span>' + SAMP[k].l + '</span></button>';
+      }).join('') + '</div>' +
+      '<div class="fld" style="margin-top:10px"><div class="fl">' + svg('nodes', 13) + '<span>Refine by</span></div>' + sel('sub', SAMP[S.samp].opts, S.sub) + '</div>';
+  }
+  function constructsBody(editing) {
+    var n = 0;
+    var h = S.constructs.map(function (c, i) {
+      var head = editing
+        ? '<div class="cbh"><span class="ci">' + svg('fork', 13) + '</span><input class="cname" data-cname="' + i + '" value="' + esc(c.name) + '"><button class="iconbtn" data-act="cdel" data-i="' + i + '" title="Remove">' + svg('trash', 13) + '</button></div><input class="cdesc" data-cdesc="' + i + '" value="' + esc(c.desc) + '" placeholder="Short description">'
+        : '<div class="cbh"><span class="ci">' + svg('fork', 13) + '</span><b>' + esc(c.name) + '</b></div><p class="cdescp">' + esc(c.desc) + '</p>';
+      var qs = '';
+      if (S.qsReady) {
+        qs = '<ol class="qs">' + c.qs.filter(function (q) { return q.trim(); }).map(function (q) {
+          n++;
+          var rv = checkLine(q).some(function (f) { return f.cat === 'review'; });
+          return '<li><span class="qn">Q' + n + '</span>' + esc(q) + (rv ? '<span class="tag warn">Review</span>' : '') + '</li>';
+        }).join('') + '</ol><button class="link small regen" data-act="regenc" data-i="' + i + '">' + svg('regen', 12) + ' Regenerate this construct</button>';
+      }
+      return '<div class="cb">' + head + qs + '</div>';
+    }).join('');
+    if (editing) h += '<button class="ghost" data-act="cadd">' + svg('plus', 12) + ' Add construct</button>';
+    return h;
+  }
+  function flagsBody() {
+    var F = allFlags();
+    var h = '<div class="fsum"><span class="num">' + F.review.length + '</span><span class="mute">to review · ' + F.fixed.length + ' fixed automatically</span></div>';
+    if (F.fixed.length) {
+      h += '<div class="fsec"><div class="fh ok-c">' + svg('check', 13) + ' Fixed automatically</div>' +
+        F.fixed.map(function (f) { return '<div class="fx"><s>' + esc(f.from) + '</s><span>' + esc(f.to) + '</span></div>'; }).join('') + '</div>';
+    }
+    h += '<div class="fsec"><div class="fh">' + svg('flag', 13) + ' Review carefully</div>' +
+      F.review.map(function (r) {
+        return '<div class="flag"><b>' + esc(r.title) + '</b><small>' + esc(r.detail) + '</small>' + (r.text ? '<small class="qtext">' + esc(r.text) + '</small>' : '') + '</div>';
+      }).join('') + '</div>';
+    return h;
+  }
+  var PH = {
+    population:'Describe a different population, or change one field',
+    design:'For example: cluster sample by course section',
+    constructs:'Add a construct on trust, or remove one',
+    flags:'Ask about a flag, or regenerate the questions'
+  };
+  function stageBar(k) {
+    return '<form class="sbar" data-k="' + k + '"><input name="t" placeholder="' + PH[k] + '" autocomplete="off">' +
+      '<button class="ghost" type="button" data-act="regen" data-k="' + k + '">' + svg('regen', 12) + ' Regenerate</button>' +
+      '<button class="outline" type="submit">Apply</button></form>';
+  }
+  function applyStage(k, text) {
+    var t = text.trim(), l = t.toLowerCase();
+    S.note = '';
+    if (!t) return;
+    if (k === 'population') {
+      var w = WHO.slice().sort(function (a, b) { return b.length - a.length; }).filter(function (x) { return l.indexOf(x.toLowerCase().replace(/s$/, '')) > -1; })[0];
+      if (w) { S.pop.who = w; S.popOverride = ''; S.note = 'Population set to ' + w.toLowerCase() + '.'; }
+      else { S.popOverride = cap(t.replace(/\.?$/, '.')); S.note = 'Population replaced with your description.'; }
+    } else if (k === 'design') {
+      var m = null;
+      if (/cluster/.test(l)) m = ['samp', 'cluster'];
+      else if (/quota/.test(l)) m = ['samp', 'quota'];
+      else if (/simple/.test(l)) m = ['samp', 'simple'];
+      else if (/convenien/.test(l)) m = ['samp', 'conv'];
+      else if (/strat/.test(l)) m = ['samp', 'strat'];
+      else if (/experiment|randomi[sz]ed/.test(l)) m = ['design', 'experiment'];
+      else if (/pre|post|wave/.test(l)) m = ['design', 'prepost'];
+      if (m) { S[m[0]] = m[1]; if (m[0] === 'samp') S.sub = SAMP[m[1]].opts[0]; S.note = 'Design updated.'; }
+      else S.note = 'Could not map that to a design or sampling option. Pick one above.';
+    } else if (k === 'constructs') {
+      var add = t.match(/^add (.+)$/i), rem = t.match(/^remove (.+)$/i);
+      if (add) { var nm = cap(add[1]); S.constructs.push({ name:nm, desc:'', gen:true, qs:[] }); if (S.qsReady) regenConstruct(S.constructs.length - 1); S.note = 'Added “' + nm + '”.'; }
+      else if (rem) {
+        var idx = -1; S.constructs.forEach(function (c, i) { if (idx < 0 && c.name.toLowerCase().indexOf(rem[1].toLowerCase()) > -1) idx = i; });
+        if (idx > -1) { S.note = 'Removed “' + S.constructs[idx].name + '”.'; S.constructs.splice(idx, 1); } else S.note = 'No construct matches that name.';
+      } else S.note = 'Say “add <name>” or “remove <name>”.';
+    } else if (k === 'flags') {
+      if (/fix|regen|rewrite/.test(l)) { regenAll(); } else S.note = 'Say “regenerate” to rebuild questions and apply safe fixes.';
+    }
+  }
+  function regenStage(k) {
+    S.note = '';
+    if (k === 'population') { S.popOverride = ''; S.note = 'Population reset to the suggestion.'; }
+    if (k === 'design') { S.note = 'Design kept. Choose another option above to change it.'; }
+    if (k === 'constructs') { regenAll(); }
+    if (k === 'flags') { regenAll(); }
+  }
+  function summary(k) {
+    if (k === 'population') return shorten(popText(), 70);
+    if (k === 'design') return DESIGNS[S.design] + ' · ' + sampText();
+    if (k === 'constructs') {
+      var q = S.constructs.reduce(function (a, c) { return a + c.qs.filter(function (x) { return x.trim(); }).length; }, 0);
+      return S.constructs.length + ' constructs' + (S.qsReady ? ', ' + q + ' questions' : '');
+    }
+    var F = allFlags();
+    return F.review.length + ' to review · ' + F.fixed.length + ' fixed';
+  }
+  function bodyFor(k, editing) {
+    if (k === 'population') return popBody(editing);
+    if (k === 'design') return designBody(editing);
+    if (k === 'constructs') return constructsBody(editing);
+    return flagsBody();
+  }
+  function actionsFor(k, editing) {
+    var fresh = !S.done[k];
+    if (k === 'flags') return '<button class="outline" data-act="next" data-k="flags">Generate plan</button>';
+    if (k === 'constructs' && !S.qsReady) return '<button class="outline" data-act="gen">Generate questions</button>';
+    if (editing && !fresh) return '<button class="outline" data-act="save" data-k="' + k + '">Save</button>';
+    return '<button class="outline" data-act="next" data-k="' + k + '">Confirm</button>';
+  }
+
+  var ICON_STEP = { population:'user', design:'layers', constructs:'fork', flags:'flag' };
+  function stepBlock(k) {
+    var idx = STEPS.indexOf(k);
+    var cur = S.step === 'done' ? STEPS.length : STEPS.indexOf(S.step);
+    if (idx > cur) return '';
+    var cls = enter('b:' + k);
+    if (S.done[k] && S.editing !== k) {
+      return '<div class="msg t' + cls + '"><div class="ok"><span class="tick">' + svg('check', 11) + '</span><b>' + TITLES[k] + '</b><span>' + esc(summary(k)) + '</span>' +
+        (k === 'flags' ? '' : '<button class="link" data-act="edit" data-k="' + k + '">Edit</button>') + '</div></div>';
+    }
+    var current = S.step === k;
+    var editing = S.editing === k || (current && !S.done[k]);
+    return '<div class="msg t' + cls + '"><p class="lead">' + PROMPTS[k] + '</p><div class="card">' +
+      '<div class="ct">' + svg(ICON_STEP[k], 13) + '<span>' + TITLES[k] + '</span></div>' +
+      bodyFor(k, editing) +
+      '<div class="acts">' + actionsFor(k, editing) + '</div>' +
+      ((current || editing) ? stageBar(k) : '') +
+      (current && S.note ? '<p class="note">' + esc(S.note) + '</p>' : '') +
+      '</div></div>';
+  }
+  function flowHTML() {
+    return progressHTML() + '<div class="flow"><div class="you' + enter('obj') + '">' + esc(S.objective) + '</div>' +
+      STEPS.map(stepBlock).join('') +
+      '<p class="foot mute">Confirm each step to continue. Edit any step later.</p></div>';
+  }
+  function live(attrs, text, cls) {
+    return '<span class="' + (cls || '') + '" contenteditable="true" spellcheck="false" ' + attrs + '>' + esc(text) + '</span>';
+  }
+  function planHTML() {
+    var L = S.lang === 'ar', lab = function (en) { return L && AR[en] ? AR[en] : en; };
+    var F = allFlags(), n = 0;
+    var cons = S.constructs.map(function (c, i) {
+      var qs = c.qs.map(function (q, j) {
+        n++;
+        return '<li><span class="qn">Q' + n + '</span><span class="qt" contenteditable="true" spellcheck="false" data-live="q" data-ci="' + i + '" data-qi="' + j + '">' + esc(q) + '</span>' +
+          '<button class="iconbtn sm" data-act="delq" data-i="' + i + '" data-j="' + j + '" title="Remove question">' + svg('trash', 12) + '</button></li>';
+      }).join('');
+      return '<div class="pc"><div class="pch"><span class="ci">' + svg('fork', 13) + '</span>' +
+        live('data-live="cname" data-ci="' + i + '"', c.name, 'pcn') + '<span class="grow"></span>' +
+        '<button class="link small" data-act="regenc" data-i="' + i + '">' + svg('regen', 12) + ' Regenerate</button>' +
+        '<button class="iconbtn sm" data-act="cdel" data-i="' + i + '" title="Remove construct">' + svg('trash', 12) + '</button></div>' +
+        '<div class="pcd" contenteditable="true" spellcheck="false" data-live="cdesc" data-ci="' + i + '">' + esc(c.desc) + '</div>' +
+        '<ol class="qs">' + qs + '</ol><button class="link small addq" data-act="addq" data-i="' + i + '">' + svg('plus', 12) + ' Add question</button></div>';
+    }).join('');
+    var secs = [
+      [lab('Objective'), live('data-live="objective"', S.objective, 'pbig')],
+      [lab('Target population'), '<div class="tags">' + tag('user', S.pop.who) + tag('bldg', S.pop.inst) + tag('cal', S.pop.level) + tag('globe', S.pop.region) + tag('user', 'Age ' + S.pop.ageMin + '–' + S.pop.ageMax) + tag('check', S.pop.n + ' responses') + '</div>' +
+        '<p class="val">' + live('data-live="pop"', popText()) + '</p>'],
+      [lab('Design and sampling'), '<div class="pgrid2"><label class="kv">' + svg('doc', 13) + '<select data-bind="design">' + Object.keys(DESIGNS).map(function (k) { return '<option value="' + k + '"' + (S.design === k ? ' selected' : '') + '>' + DESIGNS[k] + '</option>'; }).join('') + '</select></label>' +
+        '<label class="kv">' + svg('layers', 13) + '<select data-bind="samp">' + Object.keys(SAMP).map(function (k) { return '<option value="' + k + '"' + (S.samp === k ? ' selected' : '') + '>' + SAMP[k].l + '</option>'; }).join('') + '</select></label>' +
+        '<label class="kv">' + svg('nodes', 13) + '<select data-bind="sub">' + SAMP[S.samp].opts.map(function (o) { return '<option' + (o === S.sub ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select></label>' +
+        '<label class="kv">' + svg('check', 13) + '<span>Target</span>' + live('data-live="n"', String(S.pop.n)) + '</label></div>'],
+      [lab('Constructs and questions'), cons + '<button class="ghost small" data-act="cadd">' + svg('plus', 12) + ' Add construct</button>'],
+      [lab('Flags'), '<div class="fsum"><span class="num" id="flagnum">' + F.review.length + '</span><span class="mute">to review · ' + F.fixed.length + ' fixed automatically</span></div>' + flagsBody().replace(/^<div class="fsum">.*?<\/div>/, '')],
+      [lab('Ethics'), '<p class="val">Standard review, to confirm with the committee. No minors or health data in this design. <button class="link" data-act="ethics">Open ethics submission</button></p>']
+    ];
+    var doc = secs.map(function (s, i) {
+      return '<section class="sec' + enter('p:' + i) + '" style="--d:' + (i * 60) + 'ms"><div class="sh"><span class="sn">' + (i + 1) + '</span><h3 class="serif">' + s[0] + '</h3></div>' + s[1] + '</section>';
+    }).join('');
+    var modal = S.modal === 'ethics' ?
+      '<div class="scrim"><div class="modal" role="dialog" aria-label="Ethics submission"><h2 class="serif">Ethics submission</h2>' +
+      '<ul class="check">' + [['Review route','Standard, to confirm'],['Minors in sample','None'],['Health data','None'],['Consent text','Draft ready'],['Data plan','Draft ready']].map(function (r) { return '<li><span>' + r[0] + '</span><span class="mute">' + r[1] + '</span></li>'; }).join('') + '</ul>' +
+      (S.modalNote ? '<p class="note">' + esc(S.modalNote) + '</p>' : '') +
+      '<div class="acts"><button class="ghost" data-act="closemodal">Close</button><button class="outline" data-act="prepare">Prepare package</button></div></div></div>' : '';
+    return '<header class="ptop"><div class="ptl"><div class="mute small">' + svg('doc', 12) + ' ' + lab('Survey plan') + '</div>' +
+      live('data-live="objective"', S.objective, 'ptitle') + '</div>' +
+      '<div class="ptr"><span class="pill">' + svg('flag', 12) + ' <b id="flagpill">' + F.review.length + '</b></span>' +
+      '<button class="iconbtn lbl" data-act="ethics">' + svg('shield', 13) + ' Ethics</button>' +
+      '<select id="formsel" class="mini">' + FORMS.map(function (f) { return '<option value="' + f.v + '"' + (S.form === f.v ? ' selected' : '') + '>' + f.l + '</option>'; }).join('') + '</select>' +
+      '<button class="iconbtn lbl dark" data-act="genform">' + svg('send', 12) + ' Form</button>' +
+      '<div class="seg"><button class="' + (!L ? 'on' : '') + '" data-act="lang" data-v="en">EN</button><button class="' + (L ? 'on' : '') + '" data-act="lang" data-v="ar">' + svg('lang', 12) + ' عربي</button></div></div>' +
+      (S.formNote ? '<div class="note">' + esc(S.formNote) + '</div>' : '') + '</header>' +
+      '<div class="pgrid"><article class="doc' + (L ? ' rtl' : '') + '">' + doc + '</article>' +
+      '<aside class="chatp"><div class="chh">' + svg('send', 13) + ' Edit with Tahleel</div><div class="chm" id="chm">' +
+      S.chat.map(function (m) { return '<div class="bub ' + (m.role === 'u' ? 'me' : 'bot') + '">' + esc(m.text) + '</div>'; }).join('') +
+      '</div><form class="chf" id="chf"><input id="chin" placeholder="Ask for a change" autocomplete="off"><button class="iconbtn lbl" type="button" data-act="regenall">' + svg('regen', 12) + '</button><button class="outline" type="submit">Send</button></form></aside></div>' + modal;
+  }
+  function respond(text) {
+    var l = text.toLowerCase();
+    if (/regen/.test(l)) { regenAll(); return S.note; }
+    if (/trust/.test(l)) { S.constructs.push({ name:'Trust and reliability', desc:'Confidence in AI answers and checks.', gen:true, qs:[] }); regenConstruct(S.constructs.length - 1); return 'Added “Trust and reliability” with generated questions. Edit them in the plan.'; }
+    if (/arab/.test(l)) { S.lang = 'ar'; return 'Switched the headings to Arabic. Question text stays in English until it is translated.'; }
+    if (/^(add|remove) /.test(l)) { applyStage('constructs', text); return S.note; }
+    return 'In this draft I can add or remove a construct, regenerate questions, or switch the headings to Arabic. Other edits go straight into the plan.';
+  }
+  function sendChat(text) {
+    text = (text || '').trim();
+    if (!text) return;
+    S.chat.push({ role:'u', text:text });
+    S.chat.push({ role:'t', text:respond(text) });
+    render();
+  }
+  function next(k) {
+    S.done[k] = true; S.editing = null; S.note = '';
+    var i = STEPS.indexOf(k);
+    if (i < STEPS.length - 1) S.step = STEPS[i + 1];
+    else { S.step = 'done'; S.view = 'plan'; }
+    render();
+  }
+
+  var dirtyC = null;
+  function homeHTML() {
+    return '<div class="home"><h1 class="serif">What is your research objective?</h1>' +
+      '<p class="sub">For example: understanding AI usage for projects in university</p>' +
+      '<form class="composer" id="composer"><textarea id="obj" placeholder="One sentence"></textarea>' +
+      '<div class="bar"><span></span><button class="outline" type="submit">Start</button></div></form></div>';
+  }
+  function renderRecent() {
+    $('recent').innerHTML = sessions.map(function (s) {
+      var done = s.view === 'plan';
+      return '<button class="rc' + (S && S.id === s.id ? ' on' : '') + '" data-act="open" data-id="' + s.id + '" title="' + esc(s.objective) + '">' +
+        '<span class="rci">' + svg(done ? 'doc' : 'fork', 13) + '</span><span class="rct">' + esc(shorten(s.name, 26)) + '</span>' +
+        '<span class="type">' + (done ? 'Plan' : 'Draft') + '</span></button>';
+    }).join('');
+  }
+  function render() {
+    var main = $('main');
+    if (!S) main.innerHTML = homeHTML();
+    else if (S.view === 'flow') main.innerHTML = flowHTML();
+    else main.innerHTML = planHTML();
+    if (S && S.view === 'plan') { var c = $('chm'); if (c) c.scrollTop = c.scrollHeight; }
+    renderRecent();
+  }
+  function setNum(k, d) {
+    var tgt = (k === 'waves' || k === 'groups') ? S : S.pop;
+    tgt[k] = Math.min(NUM[k][1], Math.max(NUM[k][0], tgt[k] + d));
+    S.popOverride = '';
+  }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-act]'); if (!t) return;
+    var a = t.dataset.act, k = t.dataset.k, i = +t.dataset.i, j = +t.dataset.j;
+    if (a === 'new') { S = null; render(); }
+    else if (a === 'open') { S = sessions.filter(function (s) { return s.id === t.dataset.id; })[0]; render(); }
+    else if (a === 'edit') { S.editing = k; render(); }
+    else if (a === 'save') { S.editing = null; render(); }
+    else if (a === 'next') { next(k); }
+    else if (a === 'gen') { S.qsReady = true; regenAll(); render(); }
+    else if (a === 'regen') { regenStage(k); render(); }
+    else if (a === 'regenall') { regenAll(); if (S.view === 'plan') S.chat.push({ role:'t', text:S.note }); render(); }
+    else if (a === 'regenc') { regenConstruct(i); render(); }
+    else if (a === 'cadd') { S.constructs.push({ name:'New construct', desc:'', gen:true, qs:[] }); if (S.qsReady) regenConstruct(S.constructs.length - 1); render(); }
+    else if (a === 'cdel') { S.constructs.splice(i, 1); render(); }
+    else if (a === 'addq') { S.constructs[i].qs.push('New question'); S.constructs[i].gen = false; render(); }
+    else if (a === 'delq') { S.constructs[i].qs.splice(j, 1); S.constructs[i].gen = false; render(); }
+    else if (a === 'crit') {
+      var v = t.dataset.v, ix = S.pop.criteria.indexOf(v);
+      if (ix > -1) S.pop.criteria.splice(ix, 1); else S.pop.criteria.push(v);
+      S.popOverride = ''; render();
+    }
+    else if (a === 'num') { setNum(k, +t.dataset.d); render(); }
+    else if (a === 'samp') { S.samp = t.dataset.v; S.sub = SAMP[S.samp].opts[0]; render(); }
+    else if (a === 'ethics') { S.modal = 'ethics'; S.modalNote = ''; render(); }
+    else if (a === 'closemodal') { S.modal = null; render(); }
+    else if (a === 'prepare') { S.modalNote = 'Submission package prepared in this draft. Nothing was sent.'; render(); }
+    else if (a === 'genform') {
+      var f = FORMS.filter(function (x) { return x.v === $('formsel').value; })[0];
+      S.form = f.v;
+      S.formNote = 'Draft for ' + f.l + ' ready: ' + qRows().length + ' questions. Export is not connected in this draft.';
+      render();
+    }
+    else if (a === 'lang') { S.lang = t.dataset.v; render(); }
+  });
+  document.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = e.target;
+    if (f.id === 'composer') {
+      var v = $('obj').value.trim(); if (!v) return;
+      S = newSession(cap(v)); sessions.unshift(S); render();
+    } else if (f.id === 'chf') {
+      sendChat($('chin').value);
+    } else if (f.classList.contains('sbar')) {
+      applyStage(f.dataset.k, f.querySelector('input').value); render();
+    }
+  });
+  document.addEventListener('change', function (e) {
+    var t = e.target, b = t.dataset.bind; if (!b) return;
+    if (b.indexOf('pop.') === 0) { S.pop[b.slice(4)] = t.value; S.popOverride = ''; }
+    else if (b === 'design') S.design = t.value;
+    else if (b === 'samp') { S.samp = t.value; S.sub = SAMP[t.value].opts[0]; }
+    else if (b === 'sub') S.sub = t.value;
+    render();
+  });
+  document.addEventListener('input', function (e) {
+    var t = e.target, d = t.dataset;
+    if (d.live === 'objective') { S.objective = t.textContent; S.name = shorten(t.textContent, 34); document.querySelectorAll('[data-live="objective"]').forEach(function (el) { if (el !== t) el.textContent = t.textContent; }); }
+    else if (d.live === 'pop') { S.popOverride = t.textContent; }
+    else if (d.live === 'n') { S.pop.n = parseInt(t.textContent.replace(/\D/g, ''), 10) || S.pop.n; }
+    else if (d.live === 'cname') { S.constructs[+d.ci].name = t.textContent; dirtyC = +d.ci; }
+    else if (d.live === 'cdesc') { S.constructs[+d.ci].desc = t.textContent; }
+    else if (d.live === 'q') {
+      S.constructs[+d.ci].qs[+d.qi] = t.textContent; S.constructs[+d.ci].gen = false;
+      var fp = $('flagpill'); if (fp) fp.textContent = allFlags().review.length;
+    }
+    else if (d.cname !== undefined) { S.constructs[+d.cname].name = t.value; dirtyC = +d.cname; }
+    else if (d.cdesc !== undefined) { S.constructs[+d.cdesc].desc = t.value; }
+  });
+  document.addEventListener('focusout', function (e) {
+    var fd = e.target.dataset || {};
+    if (fd.live === 'q' && S) {
+      var fci = +fd.ci, fqi = +fd.qi, fq = S.constructs[fci].qs[fqi], fr = rewrite(fq || '');
+      if (fr) { S.constructs[fci].qs[fqi] = fr; S.fixed = [{ from:fq, to:fr }]; S.note = 'Auto-fixed leading wording.'; render(); return; }
+    }
+    if (dirtyC !== null && S && S.constructs[dirtyC] && S.constructs[dirtyC].gen) {
+      regenConstruct(dirtyC); dirtyC = null; render();
+    }
+    dirtyC = null;
+  });
+  document.addEventListener('keydown', function (e) {
+    var d = e.target.dataset || {};
+    if (e.key === 'Enter' && (d.live === 'objective' || d.live === 'cname' || d.live === 'n' || d.live === 'q')) { e.preventDefault(); e.target.blur(); }
+  });
+  document.addEventListener('paste', function (e) {
+    if (e.target.isContentEditable) { e.preventDefault(); document.execCommand('insertText', false, (e.clipboardData || window.clipboardData).getData('text')); }
+  });
+
+  sessions = [demoSession()];
+  S = null;
+  render();
+
+})();
+</script>
+</body>
+</html>

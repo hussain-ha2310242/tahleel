@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tahleel versions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:#F6F5F1; --card:#FFFFFF; --ink:#18181B; --mute:#6B6B70; --line:#DCDAD2; --fill:#ECEAE3;
+    --later:#EFEEE9;
+  }
+  * { box-sizing:border-box; }
+  html, body { margin:0; background:var(--paper); color:var(--ink); font-family:'Inter', system-ui, sans-serif; font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:1200px; margin:0 auto; padding:48px 24px 72px; }
+  .serif { font-family:'Fraunces', Georgia, serif; font-weight:400; letter-spacing:-0.01em; }
+
+  header { display:grid; grid-template-columns:1fr auto; gap:24px; align-items:end; padding-bottom:28px; border-bottom:1px solid var(--line); }
+  h1 { font-size:64px; line-height:1; margin:0; }
+  h1 .ar { font-family:system-ui, "Geeza Pro", "Noto Naskh Arabic", "Segoe UI", sans-serif; font-size:0.5em; color:var(--mute); margin-inline-start:12px; vertical-align:middle; }
+  .lede { color:var(--mute); max-width:520px; margin:12px 0 0; }
+  .legend { display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:var(--mute); }
+  .legend span { display:inline-flex; align-items:center; gap:6px; }
+  .sw { width:14px; height:14px; border-radius:4px; border:1px solid var(--line); display:inline-block; }
+  .sw.now { background:var(--card); border-color:var(--ink); }
+  .sw.next { background:var(--card); }
+  .sw.later { background:var(--later); }
+  .sw.gated { background:var(--paper); border-style:dashed; border-color:var(--mute); }
+
+  .rail { display:grid; grid-template-columns:repeat(4, 1fr); margin:28px 0 32px; border:1px solid var(--line); border-radius:16px; overflow:hidden; background:var(--card); }
+  .rail a { padding:14px 14px 12px; text-decoration:none; color:inherit; border-inline-end:1px solid var(--line); display:flex; flex-direction:column; gap:6px; }
+  .rail a:last-child { border-inline-end:0; }
+  .rail a:nth-child(-n+3) { }
+  .rail .n { font-size:11px; color:var(--mute); letter-spacing:.04em; text-transform:uppercase; }
+  .rail .t { font-family:'Fraunces', Georgia, serif; font-size:18px; line-height:1.1; }
+  .rail svg { width:20px; height:20px; }
+  .rail a.later { color:var(--mute); background:var(--later); }
+  .rail a.gated { color:var(--mute); background:var(--paper); }
+  .rail a:hover { background:var(--fill); }
+
+  .bento { display:grid; grid-template-columns:repeat(12, 1fr); gap:16px; }
+  .s-4 { grid-column:span 4; } .s-8 { grid-column:span 8; } .s-12 { grid-column:span 12; }
+
+  .stage { border:1px solid var(--line); border-radius:16px; padding:22px; background:var(--card); position:relative; transition:transform .25s ease, background-color .25s ease; }
+  .stage .head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:14px; }
+  .stage .kicker { font-size:12px; color:var(--mute); letter-spacing:.04em; text-transform:uppercase; }
+  .stage h2 { font-size:30px; line-height:1.05; margin:4px 0 0; }
+  .pill { font-size:11px; font-weight:500; padding:4px 10px; border-radius:999px; border:1px solid var(--ink); white-space:nowrap; }
+  .pill.later { border-color:var(--line); color:var(--mute); }
+  .pill.gated { border-color:var(--mute); color:var(--mute); border-style:dashed; }
+  .goal { color:var(--mute); margin:0 0 16px; max-width:52ch; }
+
+  .items { display:grid; grid-template-columns:1fr 1fr; gap:0 16px; margin:0; padding:0; list-style:none; }
+  .items.one { grid-template-columns:1fr; }
+    .items li { display:grid; grid-template-columns:24px 1fr; gap:10px; padding:10px 0; border-top:1px solid var(--line); }
+  .items li svg { width:20px; height:20px; margin-top:2px; color:var(--ink); }
+  .items b { display:block; font-weight:600; font-size:14px; }
+  .items small { color:var(--mute); font-size:13px; }
+
+  .stage.now { --dim:1; }
+  .stage.next { --dim:.9; }
+  .stage.later { --dim:.6; background:var(--later); }
+  .stage.gated { --dim:.45; background:var(--paper); border-style:dashed; border-color:var(--mute); }
+  .stage.later .items, .stage.later .goal, .stage.later .head,
+  .stage.gated .items, .stage.gated .goal, .stage.gated .head { opacity:var(--dim); }
+  .stage.later .items svg, .stage.gated .items svg { color:var(--mute); }
+
+  .stage.now:hover, .stage.next:hover { transform:translateY(-2px); }
+  .stage.now { box-shadow:0 0 0 1px var(--ink); }
+
+  .reveal { opacity:0; transform:translateY(8px); transition:opacity .5s ease, transform .5s ease; }
+  .reveal.in { opacity:1; transform:none; }
+
+  footer { margin-top:32px; color:var(--mute); font-size:12px; display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+
+  @media (max-width: 900px) {
+    h1 { font-size:44px; }
+    header { grid-template-columns:1fr; }
+    .rail { grid-template-columns:repeat(2, 1fr); }
+    .rail a:nth-child(2n) { border-inline-end:0; }
+    .rail a:nth-child(n+3) { border-top:1px solid var(--line); }
+    .s-4, .s-8 { grid-column:span 12; }
+  }
+  @media (max-width: 560px) {
+    .wrap { padding:32px 16px 56px; }
+    .items { grid-template-columns:1fr; }
+    .rail { grid-template-columns:repeat(2, 1fr); }
+    .rail a:nth-child(2n) { border-inline-end:0; }
+    .rail a:nth-child(n+3) { border-top:1px solid var(--line); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before { transition:none !important; animation:none !important; }
+    .reveal { opacity:1; transform:none; }
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17H6.5A2.5 2.5 0 0 1 4 14.5z"/></symbol>
+    <symbol id="i-cursor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4l13 6-5.5 1.8L10 18z"/></symbol>
+    <symbol id="i-route" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><path d="M8 6h7a3 3 0 0 1 0 6h-2a3 3 0 0 0 0 6h3"/></symbol>
+    <symbol id="i-db" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="2.5"/><path d="M5 6v12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5V6"/><path d="M5 12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l8 4-8 4-8-4z"/><path d="M4 12l8 4 8-4"/><path d="M4 16l8 4 8-4"/></symbol>
+    <symbol id="i-calc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M8.5 7.5h7"/><path d="M8.5 12h1M12 12h1M15.5 12h.01M8.5 15.5h1M12 15.5h1M8.5 18.5h1M12 18.5h3.5"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><path d="M4 6.5l1.2 1.2L7 5.5M4 12l1.2 1.2L7 11M4 17.5l1.2 1.2L7 16.5"/></symbol>
+    <symbol id="i-compass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></symbol>
+    <symbol id="i-dice" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r=".6"/><circle cx="15" cy="15" r=".6"/><circle cx="12" cy="12" r=".6"/></symbol>
+    <symbol id="i-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5-6 5 12 2.5-6H21"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l7 2.5v5.5c0 4.2-2.9 7.6-7 9-4.1-1.4-7-4.8-7-9V6z"/><path d="M9.5 12l2 2 3.5-3.5"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.5h7l4 4v13H7z"/><path d="M14 3.5v4h4M9.5 12h5M9.5 15.5h5"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5A2 2 0 0 1 5.5 5.5h4l2 2h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></symbol>
+    <symbol id="i-funnel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6 7.5V19l-4-2v-4.5z"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="11.5" height="11.5" rx="2"/><path d="M5 15.5V6.5a2 2 0 0 1 2-2h9"/></symbol>
+    <symbol id="i-scale" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v15M7 19h10M5 7h14"/><path d="M5 7l-2.5 5h5zM19 7l-2.5 5h5z"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M7 16v-4M12 16V8M17 16v-6"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h8l4 4v13H6z"/><path d="M9 12h6M9 15.5h6"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l8 4.2v8.6l-8 4.2-8-4.2V7.7z"/><path d="M4 7.7l8 4.2 8-4.2M12 11.9v8.6"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 2.5 15.4 0 18M12 3c-2.5 2.6-2.5 15.4 0 18"/></symbol>
+    <symbol id="i-nodes" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="6" r="2.2"/><circle cx="6" cy="17" r="2.2"/><circle cx="18" cy="17" r="2.2"/><path d="M10.8 7.8L7.2 15.2M13.2 7.8l3.6 7.4M8.2 17h7.6"/></symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="1.5"/><path d="M10 3.5v3.5M14 3.5v3.5M10 17v3.5M14 17v3.5M3.5 10h3.5M3.5 14h3.5M17 10h3.5M17 14h3.5"/></symbol>
+    <symbol id="i-archive" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="4" rx="1"/><path d="M5 8.5v10.5h14V8.5M10 12.5h4"/></symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1 class="serif">Tahleel</h1>
+    </div>
+  </header>
+
+  <nav class="rail reveal" aria-label="Versions">
+    <a href="#v0" class="now"><svg><use href="#i-layers"/></svg><span class="n">Version 0</span><span class="t">Objective to questions</span></a>
+    <a href="#v1" class="next"><svg><use href="#i-route"/></svg><span class="n">Version 1</span><span class="t">Minimal pipeline</span></a>
+    <a href="#v3" class="later"><svg><use href="#i-chart"/></svg><span class="n">Version 3</span><span class="t">Useful extras</span></a>
+    <a href="#v4" class="gated"><svg><use href="#i-cpu"/></svg><span class="n">Version 4</span><span class="t">Advanced</span></a>
+  </nav>
+
+  <section class="bento">
+    <article id="v0" class="stage now s-4 reveal">
+      <div class="head"><div><div class="kicker">Version 0</div><h2 class="serif">Minimal</h2></div><span class="pill">Now</span></div>
+      <p class="goal">The smallest usable thing: from an objective to a questionnaire.</p>
+      <ul class="items one">
+        <li><svg><use href="#i-chat"/></svg><div><b>Objective input</b><small>One sentence in plain language</small></div></li>
+        <li><svg><use href="#i-layers"/></svg><div><b>Draft plan</b><small>Population, design, primary outcome</small></div></li>
+        <li><svg><use href="#i-list"/></svg><div><b>Questionnaire builder</b><small>One question per line, simple scales</small></div></li>
+        <li><svg><use href="#i-scale"/></svg><div><b>Basic checker</b><small>Double-barrelled and leading wording</small></div></li>
+      </ul>
+    </article>
+
+    <article id="v1" class="stage next s-8 reveal">
+      <div class="head"><div><div class="kicker">Version 1</div><h2 class="serif">Minimal pipeline</h2></div><span class="pill">Next</span></div>
+      <p class="goal">The basic path from objective to analysis, end to end.</p>
+      <ul class="items">
+        <li><svg><use href="#i-calc"/></svg><div><b>Sample size</b><small>Two groups and one proportion</small></div></li>
+        <li><svg><use href="#i-dice"/></svg><div><b>Simple random draw</b><small>From a CSV frame, with a seed</small></div></li>
+        <li><svg><use href="#i-db"/></svg><div><b>Data upload</b><small>Responses in, basic summary tables out</small></div></li>
+        <li><svg><use href="#i-chart"/></svg><div><b>Basic analysis</b><small>Confidence intervals, t-test, chi-square</small></div></li>
+        <li><svg><use href="#i-lock"/></svg><div><b>Plan lock</b><small>Simple: analysis runs only after the lock</small></div></li>
+        <li><svg><use href="#i-file"/></svg><div><b>Plain export</b><small>Results as a CSV and a one-page summary</small></div></li>
+      </ul>
+    </article>
+
+    <article id="v3" class="stage later s-8 reveal">
+      <div class="head"><div><div class="kicker">Version 3</div><h2 class="serif">Useful extras</h2></div><span class="pill later">Later</span></div>
+      <p class="goal">Features that add real value across every stage and are straightforward to build.</p>
+      <ul class="items">
+        <li><svg><use href="#i-compass"/></svg><div><b>Sampling advisor</b><small>Suggests a design, shows its reasoning</small></div></li>
+        <li><svg><use href="#i-layers"/></svg><div><b>Stratified draw</b><small>Proportional allocation</small></div></li>
+        <li><svg><use href="#i-pulse"/></svg><div><b>Reliability</b><small>Cronbach's alpha and item-total checks</small></div></li>
+        <li><svg><use href="#i-scale"/></svg><div><b>Assumption checks</b><small>Pass, warn or fail, with reasons</small></div></li>
+        <li><svg><use href="#i-funnel"/></svg><div><b>Multiple-test correction</b><small>Holm step-down</small></div></li>
+        <li><svg><use href="#i-file"/></svg><div><b>Report export</b><small>Word and HTML from one source</small></div></li>
+        <li><svg><use href="#i-shield"/></svg><div><b>Light ethics flags</b><small>Minors and health data flagged at setup</small></div></li>
+        <li><svg><use href="#i-copy"/></svg><div><b>Duplicate and speeder flags</b><small>Flagged for review, never removed</small></div></li>
+      </ul>
+    </article>
+
+    <article id="v4" class="stage gated s-4 reveal">
+      <div class="head"><div><div class="kicker">Version 4</div><h2 class="serif">Advanced</h2></div><span class="pill gated">Gated</span></div>
+      <p class="goal">Harder to build. Start only when versions 0 to 3 are in real use.</p>
+      <ul class="items one">
+        <li><svg><use href="#i-box"/></svg><div><b>Reproducibility bundle</b><small>Hashes, versions, verify a rerun</small></div></li>
+        <li><svg><use href="#i-nodes"/></svg><div><b>Multilevel models</b><small>For students nested in classes</small></div></li>
+        <li><svg><use href="#i-cpu"/></svg><div><b>Measurement models</b><small>Factor analysis and invariance</small></div></li>
+        <li><svg><use href="#i-doc"/></svg><div><b>Full ethics pack</b><small>Consent, data plan, English and Arabic</small></div></li>
+        <li><svg><use href="#i-archive"/></svg><div><b>Sensitivity analyses</b><small>Alternative exclusions and imputations</small></div></li>
+      </ul>
+    </article>
+  </section>
+</div>
+
+<script>
+  (function () {
+    var els = document.querySelectorAll('.reveal');
+    if (!('IntersectionObserver' in window)) { els.forEach(function (e) { e.classList.add('in'); }); return; }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+      });
+    }, { threshold: 0.12 });
+    els.forEach(function (e, i) { e.style.transitionDelay = (i % 6) * 60 + 'ms'; io.observe(e); });
+  })();
+</script>
+</body>
+</html>
