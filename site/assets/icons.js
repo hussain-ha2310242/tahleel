@@ -34,7 +34,12 @@
     bolt: '<path d="M9 2 4 9h4l-1 5 5-7H8z"/>',
     tick2: '<path d="m2.5 8.5 3.5 3.5L13.5 4"/>',
     arrowUp: '<path d="M8 13V3.5M4 7.5 8 3.5l4 4"/>',
-    arrowR: '<path d="M3 8h9.5M8.5 4l4 4-4 4"/>'
+    arrowR: '<path d="M3 8h9.5M8.5 4l4 4-4 4"/>',
+    upload: '<path d="M8 10.5V2.5M4.5 6 8 2.5 11.5 6M3 13.5h10"/>',
+    pulse: '<path d="M1.5 8.5h3l1.5-4 3 8 1.5-4h4"/>',
+    bars: '<path d="M3 13.5V9M6.3 13.5V5M9.7 13.5V7.5M13 13.5V3"/>',
+    target: '<circle cx="8" cy="8" r="5.5"/><circle cx="8" cy="8" r="2.5"/><circle cx="8" cy="8" r=".4"/>',
+    shuffle: '<path d="M2 4.5h2.5c3 0 4 7 7 7H14M2 11.5h2.5c1.2 0 2-1 2.6-2.2M9 6.7c.6-1.2 1.4-2.2 2.6-2.2H14M12 2.5l2 2-2 2M12 9.5l2 2-2 2"/>'
   };
   function ic(name, cls) {
     var body = P[name];

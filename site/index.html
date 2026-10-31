@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tahleel · تحليل</title>
+<title>Tahleel</title>
 <meta name="description" content="Tahleel drafts the population, sampling, questions and checks for a research study. You confirm each step.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,9 +15,8 @@
 
   /* Hero: the name leads. */
   .hero { text-align: center; padding: 84px 0 44px; }
-  .brand { font-family: 'Fraunces', Georgia, serif; font-weight: 400; font-size: 112px; line-height: .95; letter-spacing: -0.035em; margin: 0; }
-  .brand-ar { display: block; font-family: system-ui, "Geeza Pro", "Noto Naskh Arabic", "Segoe UI", sans-serif; font-size: 20px; color: var(--mute); letter-spacing: 0; margin-top: 10px; }
-  .tag { font-family: 'Fraunces', Georgia, serif; font-size: 19px; margin: 22px 0 0; }
+  .brand { font-family: 'Fraunces', Georgia, serif; font-weight: 400; font-size: 72px; line-height: 1; letter-spacing: -0.03em; margin: 0; }
+  .tag { font-family: 'Fraunces', Georgia, serif; font-size: 18px; margin: 16px 0 0; }
   .hero p.sub { color: var(--mute); font-size: 13px; margin: 6px 0 0; }
   .cta { display: flex; gap: 8px; justify-content: center; margin-top: 22px; }
   .cta a { padding: 9px 18px; font-size: 14px; }
@@ -134,16 +133,16 @@
   .holm i:nth-child(1) { height: 30%; } .holm i:nth-child(2) { height: 45%; animation-delay: .35s; } .holm i:nth-child(3) { height: 60%; animation-delay: .7s; } .holm i:nth-child(4) { height: 78%; animation-delay: 1.05s; } .holm i:nth-child(5) { height: 100%; animation-delay: 1.4s; }
   @keyframes step { 0%, 6% { background: #c3c1b9; } 12%, 80% { background: var(--ink); } 90%, 100% { background: #c3c1b9; } }
 
-  footer { margin: 56px 0 40px; padding-top: 16px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--mute); }
+  main.wrap { padding-bottom: 72px; }
 
   @media (max-width: 900px) {
-    .brand { font-size: 80px; }
+    .brand { font-size: 60px; }
     .s2, .s3 { grid-column: span 6; }
     .s4, .s5, .s6, .s7 { grid-column: span 12; }
   }
   @media (max-width: 560px) {
     .hero { padding-top: 56px; }
-    .brand { font-size: 64px; }
+    .brand { font-size: 52px; }
     .s2, .s3 { grid-column: span 12; }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -158,7 +157,7 @@
 <body>
 <main class="wrap">
   <section class="hero rise">
-    <h1 class="brand">Tahleel<span class="brand-ar" lang="ar">تحليل</span></h1>
+    <h1 class="brand">Tahleel</h1>
     <p class="tag">Objective in. Survey plan out.</p>
     <p class="sub">Drafted from one sentence. Confirmed by you.</p>
     <div class="cta">
@@ -252,7 +251,6 @@
     </div>
   </section>
 
-  <footer><span>Tahleel · تحليل</span><span>Estimates are illustrative until a statistician reviews them.</span></footer>
 </main>
 
 <script src="/assets/icons.js"></script>

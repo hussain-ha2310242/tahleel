@@ -326,6 +326,13 @@
   }
 
   function setSub(stage, id) { if (S) { S.subActive[stage] = id; refresh(); } }
+  function stepSub(stage, d) {
+    if (!S) return;
+    var ids = (S.subSteps[stage] || []).map(function (x) { return x.id; });
+    var at = Math.max(0, ids.indexOf(S.subActive[stage] || ids[0]));
+    var to = Math.min(ids.length - 1, Math.max(0, at + d));
+    if (ids[to]) S.subActive[stage] = ids[to];
+  }
 
   function findField(st, id) { return (S.fields[st] || []).filter(function (f) { return f.id === id; })[0]; }
 
@@ -480,6 +487,7 @@
   TA.regenerate = regenerate;
   TA.undo = undo;
   TA.setSub = setSub;
+  TA.stepSub = stepSub;
   TA.setField = setField;
   TA.setRange = setRange;
   TA.toggleChip = toggleChip;

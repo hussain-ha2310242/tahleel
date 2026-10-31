@@ -29,7 +29,14 @@
   function shorten(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n).trim() + '…' : s; }
   function flagsAll(S) { return S.aiFlags.concat(TC.localFlags(S)); }
 
-  var SOON = ['Sample size', 'Random draw', 'Data upload', 'Monitor responses', 'Analyse results', 'Reliability', 'Report export', 'Ethics pack', 'PDF export'];
+  var SOON = [['hash', 'Sample size'], ['shuffle', 'Random draw'], ['upload', 'Data upload'], ['pulse', 'Monitor responses'], ['bars', 'Analyse results'], ['target', 'Reliability'], ['file', 'Report export'], ['shield', 'Ethics pack'], ['download', 'PDF export']];
+
+  // Coming features drift past slowly; the second copy makes the loop seamless and is hidden from screen readers.
+  function soonChips(copy) {
+    return SOON.map(function (x) {
+      return '<span class="soonchip" aria-disabled="true"' + (copy ? ' aria-hidden="true"' : '') + ' title="Coming soon">' + ic(x[0]) + '<span>' + esc(x[1]) + '</span><i>Soon</i></span>';
+    }).join('');
+  }
 
   function homeView() {
     return '<div class="home rise">' +
@@ -37,9 +44,7 @@
       '<form class="composer" id="home-form">' +
       '<textarea id="obj" rows="1" aria-label="Research objective"></textarea>' +
       '<button type="submit" class="go" aria-label="Start" title="Start">' + ic('arrowUp') + '</button></form>' +
-      '<div class="soon-row" aria-label="Coming soon">' + SOON.map(function (x) {
-        return '<span class="soonchip" aria-disabled="true" title="Coming soon">' + esc(x) + '</span>';
-      }).join('') + '</div></div>';
+      '<div class="soon-row" aria-label="Coming soon"><div class="soon-track">' + soonChips(false) + soonChips(true) + '</div></div></div>';
   }
 
   function progressBar(S) {
@@ -188,8 +193,17 @@
       ? '<div class="skel"><i></i><i></i><i class="s"></i></div><p class="busytxt">Working on the next step ' + DOTS + '</p>'
       : stageBody(S, k);
     var note = !busy && S.notes[k] ? '<p class="note">' + esc(S.notes[k]) + '</p>' : '';
+    var subs = (k === 'population' || k === 'design') ? (S.subSteps[k] || []) : [];
+    var nav = '';
+    if (!busy && subs.length > 1) {
+      var at = Math.max(0, subs.map(function (x) { return x.id; }).indexOf(S.subActive[k] || subs[0].id));
+      nav = '<div class="subnav" role="group" aria-label="Sub-sections">' +
+        '<button type="button" class="icon-btn sm" data-act="subnav" data-k="' + k + '" data-d="-1"' + (at === 0 ? ' disabled' : '') + ' aria-label="Previous part" title="Previous part">' + ic('chevronL') + '</button>' +
+        '<span class="subpos">' + (at + 1) + '/' + subs.length + '</span>' +
+        '<button type="button" class="icon-btn sm" data-act="subnav" data-k="' + k + '" data-d="1"' + (at === subs.length - 1 ? ' disabled' : '') + ' aria-label="Next part" title="Next part">' + ic('chevronR') + '</button></div>';
+    }
     var conf = busy ? DOTS : '<button type="button" class="icon-btn solid" data-act="confirm" data-k="' + k + '" aria-label="' + (editing ? 'Save' : 'Confirm and continue') + '" title="' + (editing ? 'Save' : (k === 'flags' ? 'Confirm and open the plan' : 'Confirm and continue')) + '">' + ic('check') + '</button>';
-    return '<section class="stage rise" id="st-' + k + '"><div class="shead"><span class="num">' + n + '</span><h2>' + esc(title) + '</h2><span class="grow"></span>' + conf + '</div>' +
+    return '<section class="stage rise" id="st-' + k + '"><div class="shead"><span class="num">' + n + '</span><h2>' + esc(title) + '</h2><span class="grow"></span>' + nav + conf + '</div>' +
       '<p class="lead">' + esc(PROMPTS[k]) + '</p>' + body + note + (busy ? '' : promptBar(S, k)) + '</section>';
   }
 
@@ -231,7 +245,7 @@
   // Respondent widget. opts: the option labels to show (English or Arabic).
   function widget(q, opts, ar) {
     var t = q.responseType;
-    if (t === 'likert5' || t === 'likert7') return '<div class="scale">' + opts.map(function (o) { return '<span class="sc">' + esc(o) + '</span>'; }).join('') + '</div>';
+    if (t === 'likert5' || t === 'likert7') return '<div class="scale lk" style="--n:' + opts.length + '">' + opts.map(function (o) { return '<span class="sc">' + esc(o) + '</span>'; }).join('') + '</div>';
     if (t === 'single') return '<div class="choices">' + opts.map(function (o) { return '<span class="ch"><i class="radio"></i>' + esc(o) + '</span>'; }).join('') + '</div>';
     if (t === 'multi') return '<div class="choices">' + opts.map(function (o) { return '<span class="ch"><i class="box"></i>' + esc(o) + '</span>'; }).join('') + '</div>';
     if (t === 'rating0_10') { var r = []; for (var i = 0; i <= 10; i++) r.push('<span class="sc">' + i + '</span>'); return '<div class="scale num">' + r.join('') + '</div>'; }

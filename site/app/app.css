@@ -36,10 +36,16 @@
 .go:active { transform: scale(.92); }
 .go:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 @keyframes pop { 0% { transform: scale(.86); } 60% { transform: scale(1.06); } 100% { transform: scale(1); } }
-/* Coming features: one row, scrolls sideways, edges fade. Not clickable. */
-.soon-row { display: flex; gap: 6px; margin-top: 16px; overflow-x: auto; scrollbar-width: none; padding: 2px 0; -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); padding-inline: 20px; }
-.soon-row::-webkit-scrollbar { display: none; }
-.soonchip { flex: none; display: inline-flex; align-items: center; border: 1px dashed var(--line); border-radius: 999px; padding: 4px 11px; font-size: 12px; color: var(--mute); cursor: default; user-select: none; white-space: nowrap; }
+/* Coming features: a slow strip that drifts sideways and pauses on hover. Not clickable. */
+.soon-row { margin-top: 18px; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 48px, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(90deg, transparent, #000 48px, #000 calc(100% - 48px), transparent); }
+.soon-track { display: flex; gap: 8px; width: max-content; padding: 2px 0; animation: drift 46s linear infinite; }
+.soon-row:hover .soon-track { animation-play-state: paused; }
+@keyframes drift { from { transform: translateX(0); } to { transform: translateX(calc(-50% - 4px)); } }
+.soonchip { flex: none; display: inline-flex; align-items: center; gap: 7px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 6px 10px 6px 8px; font-size: 12px; color: var(--ink); cursor: default; user-select: none; white-space: nowrap; transition: border-color .2s var(--ease), transform .2s var(--ease); }
+.soonchip .ic { width: 22px; height: 22px; padding: 4px; border-radius: 7px; background: var(--fill); color: var(--ink); }
+.soonchip i { font-style: normal; font-size: 10px; color: var(--mute); border: 1px dashed #c9c7bd; border-radius: 999px; padding: 0 6px; }
+.soonchip:hover { border-color: #bdbab0; transform: translateY(-1px); }
+@media (prefers-reduced-motion: reduce) { .soon-row { overflow-x: auto; } .soon-track { animation: none; } .soon-track > [aria-hidden="true"] { display: none; } }
 
 /* Progress and stage cards */
 .progress { position: sticky; top: 0; z-index: 5; background: var(--paper); padding: 10px 24px 0; }
@@ -78,6 +84,12 @@
 .skel i { display: block; height: 10px; border-radius: 6px; background: var(--fill); width: 92%; animation: pulse 1.4s infinite var(--ease); }
 .skel i.s { width: 60%; }
 .busytxt { font-size: 12.5px; color: var(--mute); margin: 8px 0 0; display: flex; align-items: center; gap: 8px; }
+
+/* Sub-section arrows in the card header */
+.subnav { display: inline-flex; align-items: center; gap: 2px; margin-right: 6px; border: 1px solid var(--line); border-radius: 999px; padding: 1px; background: var(--paper); }
+.subnav .icon-btn.sm { border-radius: 50%; }
+.subnav .icon-btn.sm .ic { width: 13px; height: 13px; }
+.subpos { font-size: 11px; color: var(--mute); min-width: 24px; text-align: center; font-variant-numeric: tabular-nums; }
 
 /* Sub-steps and fields */
 .subtabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); margin-bottom: 4px; overflow-x: auto; scrollbar-width: none; }
@@ -243,6 +255,9 @@ select.ctl { width: auto; max-width: 100%; }
 .scale { display: flex; flex-wrap: wrap; gap: 6px; }
 .sc { border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; font-size: 12px; background: var(--paper); }
 .scale:not(.num) .sc { flex: 1 1 auto; text-align: center; }
+.scale.lk { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 6px; }
+.scale.lk .sc { display: flex; align-items: center; justify-content: center; text-align: center; border-radius: 10px; padding: 6px 4px; font-size: 11.5px; line-height: 1.25; }
+@media (max-width: 560px) { .scale.lk { grid-template-columns: 1fr; } }
 .scale.num .sc { min-width: 30px; text-align: center; padding: 4px 0; }
 .choices { display: flex; flex-direction: column; gap: 6px; }
 .ch { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }

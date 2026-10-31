@@ -32,6 +32,7 @@
       case 'regenc': TA.regenerate('questions', d.cid); break;
       case 'undo': TA.undo(); break;
       case 'sub': TA.setSub(d.k, d.id); break;
+      case 'subnav': TA.stepSub(d.k, Number(d.d)); break;
       case 'step': TA.stepField(d.fst, d.fid, Number(d.d)); break;
       case 'toggle': TA.toggleChip(d.fst, d.fid, d.v); break;
       case 'switch': {
