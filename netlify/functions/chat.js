@@ -5,20 +5,26 @@
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const STAGES = ['population', 'design', 'constructs', 'questions', 'flags'];
 const SUB_STAGES = ['population', 'design'];
-const INSTRUCTIONS = ['start', 'next', 'prompt', 'regenerate', 'plan', 'translate'];
+const INSTRUCTIONS = ['start', 'next', 'prompt', 'regenerate', 'plan', 'translate', 'ask'];
 const FIELD_TYPES = ['text', 'number', 'select', 'multiselect', 'chips', 'range', 'stepper', 'toggle', 'tiles'];
 const OPTION_TYPES = ['select', 'multiselect', 'chips', 'tiles'];
 const RANGE_TYPES = ['range', 'stepper', 'number'];
 const RESPONSE_TYPES = ['likert5', 'likert7', 'single', 'multi', 'rating0_10', 'yesno', 'numeric', 'open'];
 const CHOICE_TYPES = ['single', 'multi'];
 const FLAG_CATS = ['wording', 'sampling', 'statistics', 'risk'];
-const LIMITS = { subSteps: 6, fields: 12, constructs: 8, questions: 6, options: 8, flags: 10, historyItems: 40, stateChars: 12000 };
+const LIMITS = { subSteps: 6, fields: 12, constructs: 8, questions: 6, options: 8, flags: 10, historyItems: 16, stateChars: 9000 };
 // gpt-oss-120b by default. If Groq rejects the model or a parameter (HTTP 400 or 404), the call falls back to gpt-oss-20b.
 const DEFAULT_MODEL = 'openai/gpt-oss-120b';
 const FALLBACK_MODEL = 'openai/gpt-oss-20b';
 const MODEL = process.env.GROQ_MODEL || DEFAULT_MODEL;
 // Netlify stops synchronous functions after 10 s, so the whole request (call plus retry) fits in 9 s by default.
 // The local server sets a longer budget.
+const VERSION = '0.1.3';
+// Models tried in order. A model that is missing (404), rejects a parameter (400) or is rate-limited (429) hands over to the next.
+function modelChain() {
+  const list = [MODEL, DEFAULT_MODEL, FALLBACK_MODEL];
+  return list.filter(function (m, i) { return m && list.indexOf(m) === i; });
+}
 function budgetMs() { return Number(process.env.GROQ_BUDGET_MS) || 9000; }
 
 const SYSTEM = `You are the planning engine inside Tahleel, a research-design tool for social science, education and public health in Qatar and the Gulf. Reply with one JSON object and nothing else.
@@ -27,7 +33,7 @@ Stages, in order: population, design, constructs, questions, flags.
 - population: the target population. Create 2 to 5 sub-steps that suit this objective (for example who, where, eligibility, size) and the fields for each. Always include two chips fields: include (inclusion criteria) and exclude (exclusion criteria), each with 3 to 5 short options. Give age, when relevant, as a range field.
 - design: the study type and sampling. Create 2 to 4 sub-steps that suit the objective.
 - constructs: 3 to 6 constructs. Each has a name and a one-sentence description. No questions yet.
-- questions: for each construct, 2 to 4 questions. Each question has text and responseType.
+- questions: for each construct, write exactly questionCount questions when the construct gives one, otherwise 2 to 4. Each question has text and responseType.
 - flags: 3 to 6 research-quality items. category is one of wording, sampling, statistics, risk. Make them specific to this plan.
 
 Field types (use only these): text, number, select, multiselect, chips, range, stepper, toggle, tiles.
@@ -43,6 +49,7 @@ Rules:
 - Research grade: one idea per question, neutral wording, no leading phrases such as "don't you agree" or "obviously".
 - Use Qatar and Gulf context where it fits. Write in English.
 - Follow the instruction. start: create the population stage. next: create the target stage from the current state. prompt: apply the user's request to the target stage. regenerate: rewrite the target stage, or only the named construct. plan: apply the request to whichever stages it touches. If the plan request is a question or asks for a summary, change nothing and answer in message only (up to 5 short sentences).
+- ask: the user asked a question about the plan or wants a summary. Change nothing. Return only {"message":"..."}: a direct answer in plain text, up to 8 short sentences, using the real details in currentState (objective, population and eligibility, study type, sampling method, sample size, constructs with their number of questions, estimated time, main flags). For a summary, cover each of those in order. Never say only that a summary was made.
 - translate: return {"message":"","constructs":[...]} with every construct and question of currentState in the same order and the same counts. Translate name, description, question text and options into Modern Standard Arabic suited to respondents in Qatar. Keep responseType unchanged. Do not add or drop anything.
 - Keep what the user has already set in the state. Change only what the request asks for.
 - Return only the keys the reply needs. Each stage you return replaces that stage's content.
@@ -61,7 +68,7 @@ function sanitizeRequest(b) {
   if (INSTRUCTIONS.indexOf(b.instruction) < 0) return { ok: false, error: 'Unknown instruction.' };
   if (STAGES.indexOf(b.target) < 0 && b.target !== 'plan' && b.target !== 'form') return { ok: false, error: 'Unknown target.' };
   const history = (Array.isArray(b.history) ? b.history : []).slice(-LIMITS.historyItems).map(function (h) {
-    return { role: str(h && h.role, 12) || 'event', text: str(h && h.text, 300) };
+    return { role: str(h && h.role, 12) || 'event', text: str(h && h.text, 200) };
   });
   let state = b.state && typeof b.state === 'object' ? b.state : {};
   let stateText = JSON.stringify(state);
@@ -103,16 +110,16 @@ function isId(v) { return typeof v === 'string' && /^[a-zA-Z][a-zA-Z0-9_-]{0,23}
 // Returns { ok:true, data } with only the allowed keys, or { ok:false, error }.
 function validate(d, req) {
   if (!d || typeof d !== 'object' || Array.isArray(d)) return { ok: false, error: 'Reply must be a JSON object.' };
-  const out = { message: str(d.message, req.target === 'plan' ? 700 : 240) };
+  const out = { message: str(d.message, req.instruction === 'ask' ? 1400 : req.target === 'plan' ? 700 : 240) };
   const errors = [];
   const target = req.target;
 
   if (Array.isArray(d.subSteps)) {
     out.subSteps = [];
     d.subSteps.forEach(function (s) {
-      if (!s || !isId(s.id) || !str(s.label, 40)) { errors.push('subSteps item needs id and label.'); return; }
+      if (!s || !isId(s.id) || !str(s.label, 40)) return;
       const stage = SUB_STAGES.indexOf(s.stage) > -1 ? s.stage : (SUB_STAGES.indexOf(target) > -1 ? target : null);
-      if (!stage) { errors.push('subSteps item needs stage population or design.'); return; }
+      if (!stage) return;
       out.subSteps.push({ id: s.id, label: str(s.label, 40), stage: stage });
     });
     out.subSteps = out.subSteps.slice(0, LIMITS.subSteps);
@@ -121,18 +128,19 @@ function validate(d, req) {
   if (Array.isArray(d.fields)) {
     out.fields = [];
     d.fields.forEach(function (f) {
-      if (!f || !isId(f.id) || !str(f.label, 60)) { errors.push('field needs id and label.'); return; }
-      if (FIELD_TYPES.indexOf(f.type) < 0) { errors.push('field "' + f.id + '" has an unsupported type.'); return; }
+      // Items that break the schema are dropped; the shape rules below decide whether enough is left.
+      if (!f || !isId(f.id) || !str(f.label, 60)) return;
+      if (FIELD_TYPES.indexOf(f.type) < 0) return;
       const stage = SUB_STAGES.indexOf(f.stage) > -1 ? f.stage : (SUB_STAGES.indexOf(target) > -1 ? target : null);
-      if (!stage) { errors.push('field "' + f.id + '" needs stage population or design.'); return; }
+      if (!stage) return;
       const field = { id: f.id, stage: stage, sub: str(f.sub, 24), label: str(f.label, 60), type: f.type, value: f.value, help: str(f.help, 140) };
       if (OPTION_TYPES.indexOf(f.type) > -1) {
         const opts = Array.isArray(f.options) ? f.options.map(function (o) { return str(String(o), 60); }).filter(Boolean) : [];
-        if (opts.length < 2) { errors.push('field "' + f.id + '" needs at least two options.'); return; }
+        if (opts.length < 2) return;
         field.options = opts.slice(0, LIMITS.options);
       }
       if (RANGE_TYPES.indexOf(f.type) > -1) {
-        if (typeof f.min !== 'number' || typeof f.max !== 'number' || f.max <= f.min) { errors.push('field "' + f.id + '" needs numeric min below max.'); return; }
+        if (typeof f.min !== 'number' || typeof f.max !== 'number' || f.max <= f.min) return;
         field.min = f.min; field.max = f.max;
       }
       out.fields.push(field);
@@ -143,15 +151,15 @@ function validate(d, req) {
   if (Array.isArray(d.constructs)) {
     out.constructs = [];
     d.constructs.forEach(function (c) {
-      if (!c || !str(c.name, 80)) { errors.push('construct needs a name.'); return; }
+      if (!c || !str(c.name, 80)) return;
       const qs = [];
       (Array.isArray(c.questions) ? c.questions : []).forEach(function (q) {
-        if (!q || !str(q.text, 300)) { errors.push('question needs text.'); return; }
-        if (RESPONSE_TYPES.indexOf(q.responseType) < 0) { errors.push('question has an unsupported responseType.'); return; }
+        if (!q || !str(q.text, 300)) return;
+        if (RESPONSE_TYPES.indexOf(q.responseType) < 0) return;
         const item = { text: str(q.text, 300), responseType: q.responseType };
         if (CHOICE_TYPES.indexOf(q.responseType) > -1) {
           const opts = Array.isArray(q.options) ? q.options.map(function (o) { return str(String(o), 80); }).filter(Boolean) : [];
-          if (opts.length < 2) { errors.push('choice question needs at least two options.'); return; }
+          if (opts.length < 2) return;
           item.options = opts.slice(0, LIMITS.options);
         }
         qs.push(item);
@@ -164,7 +172,7 @@ function validate(d, req) {
   if (Array.isArray(d.flags)) {
     out.flags = [];
     d.flags.forEach(function (f) {
-      if (!f || !str(f.title, 80)) { errors.push('flag needs a title.'); return; }
+      if (!f || !str(f.title, 80)) return;
       out.flags.push({ category: FLAG_CATS.indexOf(f.category) > -1 ? f.category : 'risk', title: str(f.title, 80), detail: str(f.detail, 240) });
     });
     out.flags = out.flags.slice(0, LIMITS.flags);
@@ -176,14 +184,24 @@ function validate(d, req) {
     const c0 = out.constructs && out.constructs[0];
     if (!c0 || !c0.questions.length) errors.push('return the named construct with at least one question.');
   } else if (target === 'population' || target === 'design') {
-    if (generative && (!out.fields || out.fields.length < 3 || !out.subSteps || out.subSteps.length < 2)) errors.push('return at least 2 sub-steps and 3 fields.');
+    // No sub-step list: build one from the fields' sub ids.
+    if (out.fields && out.fields.length && (!out.subSteps || out.subSteps.length < 2)) {
+      const seen = [];
+      out.fields.forEach(function (f) { const id = isId(f.sub) ? f.sub : 'main'; f.sub = id; if (seen.indexOf(id) < 0) seen.push(id); });
+      out.subSteps = seen.slice(0, LIMITS.subSteps).map(function (id) { return { id: id, label: id === 'main' ? 'Details' : id.charAt(0).toUpperCase() + id.slice(1).replace(/[_-]/g, ' '), stage: target }; });
+    }
+    if (generative && (!out.fields || out.fields.length < 3)) errors.push('return at least 3 fields.');
     if (!generative && !out.fields && !out.subSteps) errors.push('return the fields or sub-steps that the request changes.');
   } else if (target === 'constructs') {
     if (generative && (!out.constructs || out.constructs.length < 3)) errors.push('return 3 to 6 constructs.');
   } else if (target === 'questions') {
-    if (generative && (!out.constructs || out.constructs.length < 2 || out.constructs.some(function (c) { return !c.questions.length; }))) errors.push('return at least 2 constructs, each with 1 or more questions.');
+    if (generative && (!out.constructs || out.constructs.filter(function (c) { return c.questions.length; }).length < 2)) errors.push('return every construct with its questions.');
   } else if (target === 'flags') {
     if (generative && (!out.flags || out.flags.length < 1)) errors.push('return at least one flag.');
+  } else if (req.instruction === 'ask') {
+    // Answers only: anything else in the reply is ignored, so a question can never change the plan.
+    ['subSteps', 'fields', 'constructs', 'flags'].forEach(function (k) { delete out[k]; });
+    if (out.message.length < 40) errors.push('answer the question in message with the specific details from currentState.');
   } else if (req.instruction === 'translate') {
     const src = safeState(req.stateText).constructs || [];
     const got = out.constructs || [];
@@ -205,7 +223,7 @@ function requestBody(model, messages) {
   if (/gpt-oss/.test(model)) {
     // Reasoning models: reasoning tokens count toward the limit, so allow more. Low effort keeps the reply fast.
     body.temperature = 0.3;
-    body.max_completion_tokens = 4096;
+    body.max_completion_tokens = 2500;
     body.reasoning_effort = process.env.GROQ_REASONING || 'low';
     body.include_reasoning = false;
   } else {
@@ -246,6 +264,8 @@ async function callGroq(key, messages, model, timeoutMs) {
 }
 
 async function handler(event) {
+  // Open /api/chat in a browser to see which version and models are live. No secrets are shown.
+  if (event.httpMethod === 'GET') return json(200, { ok: true, service: 'tahleel-chat', version: VERSION, models: modelChain(), key: process.env.GROQ_API_KEY ? 'set' : 'missing' });
   if (event.httpMethod !== 'POST') return json(405, { ok: false, error: 'Use POST.' });
   const key = process.env.GROQ_API_KEY;
   if (!key) return json(500, { ok: false, error: 'GROQ_API_KEY is not set on the server.' });
@@ -256,7 +276,9 @@ async function handler(event) {
 
   const messages = buildMessages(req);
   const deadline = Date.now() + budgetMs();
-  let model = MODEL;
+  const chain = modelChain();
+  let mi = 0;
+  let model = chain[0];
   for (let attempt = 0; attempt < 2; attempt++) {
     const left = deadline - Date.now();
     if (attempt > 0 && left < 2500) break;
@@ -272,19 +294,27 @@ async function handler(event) {
         messages.push({ role: 'user', content: 'Reply with one valid JSON object only, following the output shape. No other text.' });
         continue;
       }
-      if ((reply.status === 400 || reply.status === 404) && model !== FALLBACK_MODEL && attempt === 0) { model = FALLBACK_MODEL; continue; }
+      // Model missing, unsupported parameter, or this model's per-minute limit: the fallback model has its own limit.
+      if ((reply.status === 400 || reply.status === 404 || reply.status === 429) && mi < chain.length - 1 && deadline - Date.now() > 1500) {
+        mi++; model = chain[mi]; attempt--; continue;
+      }
+      if (reply.status === 429) {
+        const wait = /try again in ([\d.]+)s/i.exec(reply.error);
+        return json(502, { ok: false, error: 'Groq rate limit reached.' + (wait ? ' Try again in ' + Math.ceil(Number(wait[1])) + ' seconds.' : ' Wait a minute and try again.') });
+      }
       return json(502, { ok: false, error: reply.error });
     }
     let parsed;
     try { parsed = JSON.parse(reply.content); } catch (e) { parsed = null; }
     const v = parsed ? validate(parsed, req) : { ok: false, error: 'Reply was not valid JSON.' };
     if (v.ok) return json(200, { ok: true, data: v.data });
+    console.log('[tahleel] reply rejected (' + req.instruction + ' ' + req.target + ', ' + model + '): ' + v.error);
     if (attempt === 0) {
       messages.push({ role: 'assistant', content: reply.content.slice(0, 4000) });
       messages.push({ role: 'user', content: 'That reply did not match the schema: ' + v.error + ' Return the full corrected JSON object only.' });
     }
   }
-  return json(502, { ok: false, error: 'The planning reply did not match the schema. Try again.' });
+  return json(502, { ok: false, error: 'The planning reply was incomplete. Try again.' });
 }
 
 exports.handler = handler;
@@ -293,5 +323,7 @@ exports.sanitizeRequest = sanitizeRequest;
 exports.buildMessages = buildMessages;
 exports.SYSTEM = SYSTEM;
 exports.MODEL = MODEL;
+exports.VERSION = VERSION;
+exports.modelChain = modelChain;
 exports.FALLBACK_MODEL = FALLBACK_MODEL;
 exports.requestBody = requestBody;

@@ -167,6 +167,14 @@ select.ctl { width: auto; max-width: 100%; }
 .qdel { opacity: 0; transition: opacity .2s var(--ease), background-color .2s var(--ease), color .2s var(--ease); }
 .q:hover .qdel, .crow:hover .qdel, .qdel:focus-visible { opacity: 1; }
 @media (hover: none) { .qdel { opacity: 1; } }
+/* Questions per construct */
+.qcount { flex: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--line); border-radius: 999px; padding: 1px; background: var(--paper); font-size: 11.5px; color: var(--mute); margin-right: 2px; }
+.qcount button { width: 20px; height: 20px; border: 0; border-radius: 50%; background: transparent; color: var(--ink); font-size: 13px; line-height: 1; }
+.qcount button:hover:not(:disabled) { background: var(--fill); }
+.qcount button:disabled { opacity: .3; }
+.qcount b { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; min-width: 8px; text-align: center; }
+.crow .qcount { margin-top: 2px; }
+
 /* Options: inline editable chips that size to their text. */
 .qopts { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
 .oc { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; background: var(--card); padding: 0 2px 0 4px; transition: border-color .2s var(--ease); }
@@ -223,7 +231,7 @@ select.ctl { width: auto; max-width: 100%; }
 .chat { border-left: 1px solid var(--line); background: var(--card); display: flex; flex-direction: column; min-height: 0; }
 .chhead { padding: 12px 14px; border-bottom: 1px solid var(--line); font-size: 13px; font-weight: 600; }
 .chmsgs { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
-.bub { max-width: 88%; padding: 8px 11px; border-radius: 14px; font-size: 12.5px; line-height: 1.5; animation: rise .25s var(--ease) both; }
+.bub { max-width: 88%; padding: 8px 11px; border-radius: 14px; font-size: 12.5px; line-height: 1.5; white-space: pre-wrap; animation: rise .25s var(--ease) both; }
 .bub.bot { background: var(--paper); border: 1px solid var(--line); align-self: flex-start; }
 .bub.me { background: var(--ink); color: var(--paper); align-self: flex-end; }
 .chform { display: flex; align-items: center; gap: 6px; padding: 10px 12px; border-top: 1px solid var(--line); }

@@ -43,6 +43,7 @@
       case 'tile': TA.setField(d.fst, d.fid, d.v, true); break;
       case 'cadd': TA.addConstruct(); break;
       case 'cdel': TA.removeConstruct(d.cid); break;
+      case 'qcount': TA.setCount(d.cid, Number(d.d)); break;
       case 'qadd': TA.addQuestion(d.cid); break;
       case 'qdel': TA.removeQuestion(d.cid, d.qid); break;
       case 'optadd': TA.addOption(d.cid, d.qid); break;

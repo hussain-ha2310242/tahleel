@@ -23,12 +23,13 @@ button:disabled { cursor: default; }
 .small { font-size: 12px; }
 [hidden] { display: none !important; }
 
-/* Icons */
+/* Icons and the tau mark */
+.tmark { flex: none; display: inline-block; }
 .ic { width: 16px; height: 16px; flex: none; display: inline-block; vertical-align: middle; }
 
 /* Top bar (same on landing and app) */
 .topbar { height: 54px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid var(--line); background: var(--paper); position: sticky; top: 0; z-index: 20; }
-.wordmark { font-family: 'Fraunces', Georgia, serif; font-size: 23px; letter-spacing: -0.015em; color: var(--ink); text-decoration: none; }
+.wordmark { display: inline-flex; align-items: center; gap: 9px; font-family: 'Fraunces', Georgia, serif; font-size: 23px; letter-spacing: -0.015em; color: var(--ink); text-decoration: none; }
 .topbar-r { display: flex; align-items: center; gap: 8px; }
 .profile { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--card); border-radius: var(--pill); padding: 3px 10px 3px 3px; font-size: 12px; }
 .avatar { width: 24px; height: 24px; border-radius: 50%; background: var(--ink); color: var(--paper); display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }

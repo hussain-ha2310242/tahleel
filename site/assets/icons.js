@@ -46,5 +46,10 @@
     if (!body) return '';
     return '<svg class="ic' + (cls ? ' ' + cls : '') + '" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + body + '</svg>';
   }
-  window.TI = { ic: ic, names: Object.keys(P) };
+  // Tahleel mark: lowercase tau on an ink square (same drawing as /assets/favicon.svg).
+  function mark(size, cls) {
+    return '<svg class="tmark' + (cls ? ' ' + cls : '') + '" width="' + size + '" height="' + size + '" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#18181B"/>' +
+      '<path d="M15 25c3-4.5 7.5-5.5 12-5h22M34 20.2 32 40c-.6 6 2.4 8.6 8.6 6.6" fill="none" stroke="#F6F5F1" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  }
+  window.TI = { ic: ic, mark: mark, names: Object.keys(P) };
 })();

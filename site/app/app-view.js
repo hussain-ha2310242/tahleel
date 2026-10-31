@@ -121,11 +121,21 @@
       opts + '</div></div>';
   }
 
+  // Number of questions Groq writes for this construct (1 to 6). Local only until the next Groq call.
+  function countStepper(c) {
+    var n = TA.qCount(c);
+    return '<span class="qcount" title="Questions to generate">' +
+      '<button type="button" data-act="qcount" data-cid="' + c.id + '" data-d="-1"' + (n <= 1 ? ' disabled' : '') + ' aria-label="Fewer questions for ' + esc(c.name) + '">−</button>' +
+      '<b>' + n + '</b><span>' + (n === 1 ? 'question' : 'questions') + '</span>' +
+      '<button type="button" data-act="qcount" data-cid="' + c.id + '" data-d="1"' + (n >= 6 ? ' disabled' : '') + ' aria-label="More questions for ' + esc(c.name) + '">+</button></span>';
+  }
+
   function constructsEditor(S) {
     return '<div class="clist">' + S.constructs.map(function (c, i) {
       return '<div class="crow"><span class="qn">' + (i + 1) + '</span><div class="cb">' +
         '<input class="cname" data-role="cname" data-cid="' + c.id + '" value="' + esc(c.name) + '" aria-label="Construct name">' +
         '<input class="cdesc" data-role="cdesc" data-cid="' + c.id + '" value="' + esc(c.description) + '" placeholder="One-line description" aria-label="Description"></div>' +
+        countStepper(c) +
         '<button type="button" class="icon-btn sm qdel" data-act="cdel" data-cid="' + c.id + '" aria-label="Remove ' + esc(c.name) + '" title="Remove">' + ic('trash') + '</button></div>';
     }).join('') + '</div><button type="button" class="text-btn" data-act="cadd">' + ic('plus') + ' Construct</button>';
   }
@@ -136,7 +146,7 @@
     return S.constructs.map(function (c) {
       return '<div class="cblock"><div class="chead">' +
         '<input class="cname" data-role="cname" data-cid="' + c.id + '" value="' + esc(c.name) + '" aria-label="Construct name">' +
-        (c.busy ? DOTS : '') + '<span class="grow"></span>' +
+        (c.busy ? DOTS : '') + '<span class="grow"></span>' + countStepper(c) +
         '<button type="button" class="icon-btn sm" data-act="regenc" data-cid="' + c.id + '" title="Regenerate questions" aria-label="Regenerate questions for ' + esc(c.name) + '">' + ic('refresh') + '</button>' +
         (removable ? '<button type="button" class="icon-btn sm" data-act="cdel" data-cid="' + c.id + '" title="Remove construct" aria-label="Remove ' + esc(c.name) + '">' + ic('trash') + '</button>' : '') + '</div>' +
         '<input class="cdesc" data-role="cdesc" data-cid="' + c.id + '" value="' + esc(c.description) + '" placeholder="One-line description" aria-label="Description">' +
@@ -147,7 +157,7 @@
 
   function flagsView(S) {
     var all = flagsAll(S);
-    var h = '<div class="fsum"><span class="fnum">' + all.length + '</span><span class="mute">items to review</span></div>';
+    var h = '';
     ['wording', 'sampling', 'statistics', 'risk'].forEach(function (cat) {
       var items = all.filter(function (f) { return f.category === cat; });
       if (!items.length) return;

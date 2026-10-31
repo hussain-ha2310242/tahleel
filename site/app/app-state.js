@@ -55,18 +55,23 @@
     if (S.undo.length > 12) S.undo.shift();
   }
 
+  // Questions wanted for a construct: set by the user, otherwise what it has (or 3).
+  function qCount(c) { return c.count != null ? c.count : (c.questions.length || 3); }
+
   function aiState() {
     return {
+      flags: S.aiFlags.concat(TC.localFlags(S)).map(function (f) { return f.title + ': ' + f.detail; }).slice(0, 10),
+      estimatedSeconds: TC.totalSeconds(S.constructs),
       subSteps: S.subSteps,
       fields: { population: S.fields.population, design: S.fields.design },
       constructs: S.constructs.map(function (c) {
-        return { name: c.name, description: c.description, questions: c.questions.map(function (q) { return { text: q.text, responseType: q.responseType, options: q.options }; }) };
+        return { name: c.name, description: c.description, questionCount: qCount(c), questions: c.questions.map(function (q) { return { text: q.text, responseType: q.responseType, options: q.options }; }) };
       })
     };
   }
 
   function payload(instruction, target, prompt, construct) {
-    return { instruction: instruction, target: target, objective: S.objective, prompt: prompt || '', construct: construct || '', state: aiState(), history: S.history.slice(-40) };
+    return { instruction: instruction, target: target, objective: S.objective, prompt: prompt || '', construct: construct || '', state: aiState(), history: S.history.slice(-16) };
   }
 
   // Runs a reply against the session that made the request, so a reply that arrives after the user
@@ -203,7 +208,7 @@
         var prev = old.filter(function (o) { return o.name.toLowerCase() === name.toLowerCase(); })[0];
         var qs = normQs(c.questions);
         return {
-          id: prev ? prev.id : TC.uid('c'), name: name, description: String(c.description || '').slice(0, 200),
+          id: prev ? prev.id : TC.uid('c'), name: name, description: String(c.description || '').slice(0, 200), count: prev ? prev.count : undefined,
           questions: qs.length ? qs : (prev ? prev.questions : [])
         };
       });
@@ -212,7 +217,7 @@
         var ix = S.constructs.map(function (x) { return x.name.toLowerCase(); }).indexOf(nc.name.toLowerCase());
         if (ix > -1) {
           var old = S.constructs[ix];
-          S.constructs[ix] = { id: old.id, name: nc.name, description: nc.description || old.description, questions: nc.questions.length ? nc.questions : old.questions };
+          S.constructs[ix] = { id: old.id, count: old.count, name: nc.name, description: nc.description || old.description, questions: nc.questions.length ? nc.questions : old.questions };
         } else S.constructs.push(nc);
       });
     }
@@ -223,8 +228,6 @@
     }
     if (target === 'plan') {
       S.chat.push({ role: 't', text: String(d.message || 'Updated the plan.').slice(0, 700) });
-      // An answer with no changes leaves nothing to undo.
-      if (!d.fields && !d.constructs && !d.flags && !d.subSteps) S.undo.pop();
     } else {
       S.notes[target] = String(d.message || '').slice(0, 240);
       S.loaded[target] = true;
@@ -391,8 +394,14 @@
 
   function addConstruct() {
     if (!S) return;
-    S.constructs.push({ id: TC.uid('c'), name: 'New construct', description: '', questions: [] });
+    S.constructs.push({ id: TC.uid('c'), name: 'New construct', description: '', questions: [], count: 3 });
     historyPush('edit', 'Added construct');
+  }
+  function setCount(cid, d) {
+    var c = findC(cid);
+    if (!c) return;
+    var n = Math.min(6, Math.max(1, qCount(c) + d));
+    if (n !== qCount(c)) { c.count = n; historyPush('edit', c.name + ': ' + n + ' questions wanted'); }
   }
   function removeConstruct(cid) {
     if (!S) return;
@@ -462,18 +471,47 @@
     if (commit) historyPush('edit', 'Option changed to ' + value);
   }
 
+  // Questions and summaries are answered in the chat and change nothing. Anything else is a change request.
+  var ASK = /^(summar|recap|overview|explain|describe|what|why|how|which|who|where|when|list|tell|show|is |are |does |do |can |could |should |would )|\?\s*$/i;
+
+  function sectionsChanged(before) {
+    var names = [];
+    if (JSON.stringify(before.fields.population) !== JSON.stringify(S.fields.population)) names.push('target population');
+    if (JSON.stringify(before.fields.design) !== JSON.stringify(S.fields.design)) names.push('design');
+    if (JSON.stringify(before.constructs.map(function (c) { return [c.name, c.description]; })) !== JSON.stringify(S.constructs.map(function (c) { return [c.name, c.description]; }))) names.push('constructs');
+    if (JSON.stringify(before.constructs.map(function (c) { return c.questions.map(function (q) { return [q.text, q.responseType, q.options]; }); })) !== JSON.stringify(S.constructs.map(function (c) { return c.questions.map(function (q) { return [q.text, q.responseType, q.options]; }); }))) names.push('questions');
+    if (JSON.stringify(before.aiFlags) !== JSON.stringify(S.aiFlags)) names.push('flags');
+    return names;
+  }
+
   function planChat(text) {
     text = String(text || '').trim();
     if (!text || !S || S.busy) return;
+    var ask = ASK.test(text);
     S.chat.push({ role: 'u', text: text });
-    pushUndo('Plan change');
     historyPush('user', text);
     S.busy = 'plan';
+    if (ask) {
+      refresh();
+      later(S, apiCall(payload('ask', 'plan', text)), function (r) {
+        S.busy = '';
+        if (r.ok) { S.chat.push({ role: 't', text: String(r.data.message).slice(0, 1400) }); historyPush('assistant', r.data.message); }
+        else S.chat.push({ role: 't', text: 'Could not answer that. ' + (r.error || '') });
+      });
+      return;
+    }
+    pushUndo('Plan change');
+    var before = snapshot();
     refresh();
     later(S, apiCall(payload('plan', 'plan', text)), function (r) {
       S.busy = '';
-      if (r.ok) { applyAI(r.data, 'plan', 'merge'); historyPush('assistant', r.data.message || 'Updated.'); }
-      else { S.undo.pop(); S.chat.push({ role: 't', text: 'Could not apply that. ' + (r.error || '') }); }
+      if (!r.ok) { S.undo.pop(); S.chat.push({ role: 't', text: 'Could not apply that. ' + (r.error || '') }); return; }
+      applyAI(r.data, 'plan', 'merge');
+      var changed = sectionsChanged(before);
+      var last = S.chat[S.chat.length - 1];
+      if (changed.length) last.text += '\nUpdated: ' + changed.join(', ') + '.';
+      else { last.text += '\nNothing in the plan changed.'; S.undo.pop(); }
+      historyPush('assistant', last.text);
     });
   }
 
@@ -495,6 +533,8 @@
   TA.stepField = stepField;
   TA.addConstruct = addConstruct;
   TA.removeConstruct = removeConstruct;
+  TA.setCount = setCount;
+  TA.qCount = qCount;
   TA.setConstruct = setConstruct;
   TA.addQuestion = addQuestion;
   TA.removeQuestion = removeQuestion;

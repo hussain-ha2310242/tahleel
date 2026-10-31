@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tahleel</title>
 <meta name="description" content="Tahleel drafts the population, sampling, questions and checks for a research study. You confirm each step.">
@@ -44,8 +45,7 @@
   .next .t:hover { box-shadow: 0 14px 26px -20px rgba(24, 24, 27, .4); }
   .later .t { background: var(--later); min-height: 92px; }
   .later .t h3, .later .t p, .later .t .v { opacity: .75; }
-  .gated .t { background: var(--paper); border-style: dashed; border-color: #b9b8b2; min-height: 84px; }
-  .gated .t h3, .gated .t p { opacity: .6; }
+  .later .t.adv { background: var(--paper); border-style: dashed; border-color: #c4c2ba; }
 
   /* Reveal on scroll: fade and rise 8px, once, staggered (first brainstorm motion). */
   .reveal { opacity: 0; transform: translateY(8px); transition: opacity .5s ease, transform .5s ease; }
@@ -158,8 +158,7 @@
 <main class="wrap">
   <section class="hero rise">
     <h1 class="brand">Tahleel</h1>
-    <p class="tag">Objective in. Survey plan out.</p>
-    <p class="sub">Drafted from one sentence. Confirmed by you.</p>
+    <p class="tag">One sentence to a validated survey plan, then monitoring and analysis.</p>
     <div class="cta">
       <a class="btn-dark" href="/app/">Start <span data-ic="arrowR"></span></a>
       <a class="btn-line" href="/app/?demo=1">Open demo</a>
@@ -224,9 +223,9 @@
     </div>
   </section>
 
-  <!-- Version 3 -->
+  <!-- Versions 3 and 4 -->
   <section class="band later" id="later">
-    <div class="bhead"><span class="pill later">Later</span><h2 class="serif">Useful extras</h2></div>
+    <div class="bhead"><span class="pill later">Later</span><h2 class="serif">Planned</h2></div>
     <div class="bento">
       <article class="t s3 reveal"><h3>Sampling advisor</h3><p>Suggests a design, with reasons.</p></article>
       <article class="t s3 reveal"><h3>Stratified draw</h3><p>Proportional allocation.</p><div class="v"><div class="strat"><i></i><i></i><i></i></div></div></article>
@@ -236,18 +235,11 @@
       <article class="t s3 reveal"><h3>Report export</h3><p>Word and HTML, one source.</p></article>
       <article class="t s3 reveal"><h3>Light ethics flags</h3><p>Minors and health data.</p></article>
       <article class="t s3 reveal"><h3>Duplicate and speeder flags</h3><p>Flagged, never removed.</p></article>
-    </div>
-  </section>
-
-  <!-- Version 4 -->
-  <section class="band gated" id="advanced">
-    <div class="bhead"><span class="pill gated">Advanced</span><h2 class="serif">After real use</h2></div>
-    <div class="bento">
-      <article class="t s4 reveal"><h3>Reproducibility bundle</h3><p>Hashes, versions, verified reruns.</p></article>
-      <article class="t s4 reveal"><h3>Multilevel models</h3><p>Students within classes.</p></article>
-      <article class="t s4 reveal"><h3>Measurement models</h3><p>Factor analysis, invariance.</p></article>
-      <article class="t s6 reveal"><h3>Full ethics pack</h3><p>Consent and data plan, English and عربي.</p></article>
-      <article class="t s6 reveal"><h3>Sensitivity analyses</h3><p>Other exclusions and imputations.</p></article>
+      <article class="t s4 reveal adv"><h3>Reproducibility bundle</h3><p>Hashes, versions, verified reruns.</p></article>
+      <article class="t s4 reveal adv"><h3>Multilevel models</h3><p>Students within classes.</p></article>
+      <article class="t s4 reveal adv"><h3>Measurement models</h3><p>Factor analysis, invariance.</p></article>
+      <article class="t s6 reveal adv"><h3>Full ethics pack</h3><p>Consent and data plan, English and عربي.</p></article>
+      <article class="t s6 reveal adv"><h3>Sensitivity analyses</h3><p>Other exclusions and imputations.</p></article>
     </div>
   </section>
 
