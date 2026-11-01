@@ -44,12 +44,17 @@
       case 'cadd': TA.addConstruct(); break;
       case 'cdel': TA.removeConstruct(d.cid); break;
       case 'qcount': TA.setCount(d.cid, Number(d.d)); break;
+      case 'consent': TA.toggleConsent(); break;
+      case 'demo': TA.toggleDemo(); break;
+      case 'demoitem': TA.toggleDemoItem(d.v); break;
       case 'qadd': TA.addQuestion(d.cid); break;
       case 'qdel': TA.removeQuestion(d.cid, d.qid); break;
       case 'optadd': TA.addOption(d.cid, d.qid); break;
       case 'optdel': TA.removeOption(d.cid, d.qid, Number(d.i)); break;
       case 'unreword': TA.unreword(d.cid, d.qid); break;
-      default: return;
+      default:
+        if (TA.workClick && TA.workClick(a, d)) break;
+        return;
     }
     TA.render();
   });
@@ -96,6 +101,7 @@
   // Typing: update state only, no re-render, so focus stays.
   document.addEventListener('input', function (e) {
     var t = e.target, d = t.dataset;
+    if (d.role && d.role.indexOf('w-') === 0) { if (t.classList.contains('story')) TA.autosize(t); if (TA.workInput('input', t)) TA.render(); return; }
     if (t.id === 'obj') {
       TA.autosize(t);
       var go = document.querySelector('.composer .go');
@@ -113,6 +119,7 @@
       case 'cdesc': TA.setConstruct(d.cid, 'description', t.value, false); break;
       case 'qtext': TA.setQuestion(d.cid, d.qid, t.value, false); TA.autosize(t); break;
       case 'opt': TA.setOption(d.cid, d.qid, Number(d.i), t.value, false); TA.fitOpt(t); break;
+      case 'consent': TA.setConsentText(d.lang, t.value); break;
       case 'pname': TA.setName(t.value); break;
       case 'pobj': TA.setObjective(t.value); break;
     }
@@ -122,6 +129,7 @@
   document.addEventListener('change', function (e) {
     var t = e.target, d = t.dataset;
     if (!d.role) return;
+    if (d.role.indexOf('w-') === 0) { if (TA.workInput('change', t)) TA.render(); return; }
     switch (d.role) {
       case 'field':
         if (d.kind === 'select') TA.setField(d.fst, d.fid, t.value, true);

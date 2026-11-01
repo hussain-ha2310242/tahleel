@@ -13,3 +13,11 @@
 - Five confirmed stages (population, design, constructs, questions, flags), then an editable plan with a plan chat.
 - Form preview in English or Arabic. Arabic comes from Groq per version of the questionnaire; the demo ships with a hand translation.
 - Model `openai/gpt-oss-120b` with `openai/gpt-oss-20b` as fallback. Local server and test scripts in `scripts/`.
+
+## 2026-11-01 · Version 0.2
+
+- Data to report: Plan, Data, Analysis and Report tabs in the workspace.
+- Optional consent (English and Arabic text) and demographics (seven items, nationality with all countries) in the plan and form preview.
+- Synthetic data with planted effects, CSV upload with column matching, rule-based checks with keep or leave out.
+- Statistics library and 14-module analysis pool in JavaScript, validated against scipy and statsmodels (121 values).
+- Groq plans analyses by picking modules from the pool (no code writing) and writes the report story from computed results only.

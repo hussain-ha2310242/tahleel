@@ -5,7 +5,7 @@
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const STAGES = ['population', 'design', 'constructs', 'questions', 'flags'];
 const SUB_STAGES = ['population', 'design'];
-const INSTRUCTIONS = ['start', 'next', 'prompt', 'regenerate', 'plan', 'translate', 'ask'];
+const INSTRUCTIONS = ['start', 'next', 'prompt', 'regenerate', 'plan', 'translate', 'ask', 'analysis_plan', 'report'];
 const FIELD_TYPES = ['text', 'number', 'select', 'multiselect', 'chips', 'range', 'stepper', 'toggle', 'tiles'];
 const OPTION_TYPES = ['select', 'multiselect', 'chips', 'tiles'];
 const RANGE_TYPES = ['range', 'stepper', 'number'];
@@ -19,7 +19,7 @@ const FALLBACK_MODEL = 'openai/gpt-oss-20b';
 const MODEL = process.env.GROQ_MODEL || DEFAULT_MODEL;
 // Netlify stops synchronous functions after 10 s, so the whole request (call plus retry) fits in 9 s by default.
 // The local server sets a longer budget.
-const VERSION = '0.1.3';
+const VERSION = '0.2.0';
 // Models tried in order. A model that is missing (404), rejects a parameter (400) or is rate-limited (429) hands over to the next.
 function modelChain() {
   const list = [MODEL, DEFAULT_MODEL, FALLBACK_MODEL];
@@ -50,6 +50,8 @@ Rules:
 - Use Qatar and Gulf context where it fits. Write in English.
 - Follow the instruction. start: create the population stage. next: create the target stage from the current state. prompt: apply the user's request to the target stage. regenerate: rewrite the target stage, or only the named construct. plan: apply the request to whichever stages it touches. If the plan request is a question or asks for a summary, change nothing and answer in message only (up to 5 short sentences).
 - ask: the user asked a question about the plan or wants a summary. Change nothing. Return only {"message":"..."}: a direct answer in plain text, up to 8 short sentences, using the real details in currentState (objective, population and eligibility, study type, sampling method, sample size, constructs with their number of questions, estimated time, main flags). For a summary, cover each of those in order. Never say only that a summary was made.
+- analysis_plan: you are the analysis agent. currentState has the plan, the data columns (id, kind, levels) and the module pool. Choose 4 to 8 analyses that answer the research objective, using only modules from the pool and only column ids from the columns list, with each parameter of the right kind. Return {"message":"one sentence","tasks":[{"title":"the research question in plain words","module":"compare_groups","params":{"outcome":"S_trust","group":"college"},"why":"one short sentence"}]}. Prefer scale scores (kind "scale") over single items, group comparisons by demographics, relationships between scales, and one regression. Do not add descriptive or reliability tasks; those are added automatically. Use "test":"auto" or leave test out. Never invent columns or modules.
+- report: currentState.results holds computed results. Write {"summary":"3 to 5 sentences","findings":[{"id":"task id","story":"2 to 4 plain sentences"}],"limitations":"2 to 3 sentences"}. Use only numbers that appear in the results; never compute or invent figures. Say what each result means for the research objective, mention effect sizes in words (small, medium, large), and treat Holm-adjusted p as the deciding p when given. Note that synthetic data is not real when currentState.synthetic is true.
 - translate: return {"message":"","constructs":[...]} with every construct and question of currentState in the same order and the same counts. Translate name, description, question text and options into Modern Standard Arabic suited to respondents in Qatar. Keep responseType unchanged. Do not add or drop anything.
 - Keep what the user has already set in the state. Change only what the request asks for.
 - Return only the keys the reply needs. Each stage you return replaces that stage's content.
@@ -66,13 +68,14 @@ function str(v, max) { return typeof v === 'string' ? v.trim().slice(0, max) : '
 function sanitizeRequest(b) {
   if (!b || typeof b !== 'object') return { ok: false, error: 'Empty request.' };
   if (INSTRUCTIONS.indexOf(b.instruction) < 0) return { ok: false, error: 'Unknown instruction.' };
-  if (STAGES.indexOf(b.target) < 0 && b.target !== 'plan' && b.target !== 'form') return { ok: false, error: 'Unknown target.' };
+  if (STAGES.indexOf(b.target) < 0 && ['plan', 'form', 'analysis', 'report'].indexOf(b.target) < 0) return { ok: false, error: 'Unknown target.' };
   const history = (Array.isArray(b.history) ? b.history : []).slice(-LIMITS.historyItems).map(function (h) {
     return { role: str(h && h.role, 12) || 'event', text: str(h && h.text, 200) };
   });
   let state = b.state && typeof b.state === 'object' ? b.state : {};
   let stateText = JSON.stringify(state);
-  if (stateText.length > LIMITS.stateChars) stateText = stateText.slice(0, LIMITS.stateChars);
+  const cap = b.instruction === 'analysis_plan' || b.instruction === 'report' ? 16000 : LIMITS.stateChars;
+  if (stateText.length > cap) stateText = stateText.slice(0, cap);
   return {
     ok: true,
     instruction: b.instruction,
@@ -169,6 +172,9 @@ function validate(d, req) {
     out.constructs = out.constructs.slice(0, LIMITS.constructs);
   }
 
+  if (req.instruction === 'analysis_plan') return validatePlan(d, req, out);
+  if (req.instruction === 'report') return validateReport(d, req, out);
+
   if (Array.isArray(d.flags)) {
     out.flags = [];
     d.flags.forEach(function (f) {
@@ -234,6 +240,52 @@ function requestBody(model, messages) {
 }
 
 const HTTP_HINT = { 401: 'The Groq key was rejected.', 403: 'Groq refused the request.', 413: 'The request was too large for Groq.', 429: 'Groq rate limit reached. Wait a moment and try again.' };
+
+// Analysis plan: modules and parameters must exist in the pool and the data columns sent by the browser.
+function validatePlan(d, req, out) {
+  const st = safeState(req.stateText), pool = Array.isArray(st.pool) ? st.pool : [], cols = Array.isArray(st.columns) ? st.columns : [];
+  const byId = {}; cols.forEach(function (c) { if (c && c.id) byId[c.id] = c; });
+  const multi = Array.isArray(st.multi) ? st.multi : [];
+  const tasks = [];
+  (Array.isArray(d.tasks) ? d.tasks : []).forEach(function (t) {
+    if (!t || typeof t !== 'object') return;
+    const mod = pool.filter(function (m) { return m && m.module === t.module; })[0];
+    if (!mod) return;
+    const params = t.params && typeof t.params === 'object' ? t.params : {}, clean = {};
+    for (const pd of mod.params || []) {
+      let v = params[pd.key];
+      if (v == null || v === '' || (Array.isArray(v) && !v.length)) { if (pd.optional) continue; return; }
+      if (pd.type === 'choice') { if ((pd.options || []).indexOf(v) < 0) continue; clean[pd.key] = v; continue; }
+      if (pd.type === 'number') { if (!isFinite(Number(v))) continue; clean[pd.key] = Number(v); continue; }
+      const okCol = function (id) {
+        if (pd.type === 'multi') return multi.indexOf(id) > -1;
+        const c = byId[id]; if (!c) return false;
+        if (pd.type === 'scale') return c.kind === 'scale' && (c.items || 0) >= 2;
+        return (pd.accepts || []).indexOf(c.kind) > -1;
+      };
+      if (pd.type === 'columns') { const arr = (Array.isArray(v) ? v : [v]).filter(okCol).slice(0, 8); if (!arr.length) return; clean[pd.key] = arr; }
+      else { if (Array.isArray(v) || !okCol(v)) return; clean[pd.key] = v; }
+    }
+    tasks.push({ title: str(t.title, 140) || mod.module, module: mod.module, params: clean, why: str(t.why, 200) });
+  });
+  if (tasks.length < 2) return { ok: false, error: 'return at least 2 tasks that use pool modules and existing column ids with the right kinds.' };
+  return { ok: true, data: { message: out.message, tasks: tasks.slice(0, 10) } };
+}
+
+// Report: every number in the text must come from the results (or be a small count).
+function numbersIn(text) { return (String(text).match(/-?\d*\.?\d+/g) || []).map(Number).filter(function (v) { return isFinite(v); }); }
+function validateReport(d, req, out) {
+  const st = safeState(req.stateText), allowed = numbersIn(JSON.stringify(st.results || [])).concat(numbersIn(String(st.n || '')));
+  const okNum = function (x) { const a = Math.abs(x); if (a <= 12 && Math.round(a) === a) return true; return allowed.some(function (y) { return Math.abs(Math.abs(y) - a) <= Math.max(0.006, 0.01 * Math.abs(y)); }); };
+  const summary = str(d.summary, 900), limitations = str(d.limitations, 700);
+  const ids = (st.results || []).map(function (r) { return r && r.id; });
+  const findings = (Array.isArray(d.findings) ? d.findings : []).filter(function (f) { return f && ids.indexOf(f.id) > -1 && str(f.story, 700); }).map(function (f) { return { id: f.id, story: str(f.story, 700) }; });
+  if (!summary || !findings.length) return { ok: false, error: 'return summary and findings for the result ids.' };
+  const bad = [];
+  [summary, limitations].concat(findings.map(function (f) { return f.story; })).forEach(function (t) { numbersIn(t).forEach(function (x) { if (!okNum(x) && bad.indexOf(x) < 0) bad.push(x); }); });
+  if (bad.length) return { ok: false, error: 'these numbers are not in the results: ' + bad.slice(0, 6).join(', ') + '. Use only numbers from currentState.results.' };
+  return { ok: true, data: { message: out.message, summary: summary, findings: findings, limitations: limitations } };
+}
 
 async function callGroq(key, messages, model, timeoutMs) {
   const ctrl = new AbortController();
@@ -323,6 +375,8 @@ exports.sanitizeRequest = sanitizeRequest;
 exports.buildMessages = buildMessages;
 exports.SYSTEM = SYSTEM;
 exports.MODEL = MODEL;
+exports.validateReport = validateReport;
+exports.validatePlan = validatePlan;
 exports.VERSION = VERSION;
 exports.modelChain = modelChain;
 exports.FALLBACK_MODEL = FALLBACK_MODEL;

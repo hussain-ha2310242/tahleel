@@ -18,7 +18,10 @@
       view: 'flow', stage: 'population', loaded: {}, confirmed: {}, editing: null, busy: '', notes: {},
       subActive: {}, subSteps: { population: [], design: [] }, fields: { population: [], design: [] },
       constructs: [], aiFlags: [], undo: [], history: [{ role: 'user', text: objective }],
-      lang: 'en', chat: []
+      lang: 'en', chat: [],
+      consent: { on: false, text: TC.CONSENT_EN, textAr: TC.CONSENT_AR },
+      demo: { on: false, items: ['age', 'gender', 'nationality', 'level'] },
+      tab: 'plan', data: null, flags: [], excluded: {}, tasks: [], results: {}, report: null, upload: null, page: 0
     };
   }
 
@@ -34,6 +37,8 @@
     s.subActive = { population: 'who', design: 'type' };
     s.constructs = TC.defaultConstructs();
     s.formAr = { sig: TC.formSig(s.constructs), constructs: TC.DEMO_AR };
+    s.consent.on = true;
+    s.demo = { on: true, items: ['age', 'gender', 'nationality', 'college', 'level'] };
     s.history = [];
     s.chat = [{ role: 't', text: 'The plan is ready. Ask for a change here, or edit any text in the plan.' }];
     return s;
@@ -61,7 +66,9 @@
   function aiState() {
     return {
       flags: S.aiFlags.concat(TC.localFlags(S)).map(function (f) { return f.title + ': ' + f.detail; }).slice(0, 10),
-      estimatedSeconds: TC.totalSeconds(S.constructs),
+      estimatedSeconds: TC.totalSeconds(S.constructs) + TC.extraSeconds(S),
+      consent: !!(S.consent && S.consent.on),
+      demographics: S.demo && S.demo.on ? S.demo.items.map(function (id) { var d = TC.demoItem(id); return d ? d.label : id; }) : [],
       subSteps: S.subSteps,
       fields: { population: S.fields.population, design: S.fields.design },
       constructs: S.constructs.map(function (c) {
@@ -514,6 +521,24 @@
       historyPush('assistant', last.text);
     });
   }
+
+  // Consent and demographics (local only, no Groq call).
+  TA.toggleConsent = function () { if (S) { S.consent.on = !S.consent.on; historyPush('edit', 'Consent ' + (S.consent.on ? 'on' : 'off')); } };
+  TA.setConsentText = function (lang, v) { if (S) S.consent[lang === 'ar' ? 'textAr' : 'text'] = v; };
+  TA.toggleDemo = function () { if (S) { S.demo.on = !S.demo.on; historyPush('edit', 'Demographics ' + (S.demo.on ? 'on' : 'off')); } };
+  TA.toggleDemoItem = function (id) {
+    if (!S || !TC.demoItem(id)) return;
+    var ix = S.demo.items.indexOf(id);
+    if (ix > -1) S.demo.items.splice(ix, 1);
+    else S.demo.items = TC.DEMOGRAPHICS.map(function (d) { return d.id; }).filter(function (x) { return x === id || S.demo.items.indexOf(x) > -1; });
+  };
+
+  // Groq call for the data-to-report stages (app-work.js). The reply is applied to the session that asked.
+  TA.call = function (instruction, target, state, cb) {
+    if (!S) return;
+    later(S, apiCall({ instruction: instruction, target: target, objective: S.objective, prompt: '', construct: '', state: state, history: S.history.slice(-8) }), cb);
+  };
+  TA.historyPush = historyPush;
 
   TA.state = function () { return S; };
   TA.sessions = function () { return sessions; };

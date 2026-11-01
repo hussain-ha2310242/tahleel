@@ -227,16 +227,19 @@
   function planView(S) {
     var head = '<header class="phead"><div class="phl"><div class="crumb">Survey plan</div>' +
       '<input class="ptitle" data-role="pname" value="' + esc(S.name) + '" aria-label="Plan name"></div>' +
+      TA.workTabs(S) +
       '<div class="phr">' +
       '<button type="button" class="btn-ghost" data-act="form">' + ic('eye') + ' Form preview</button>' +
       '<span class="pdfwrap"><button type="button" class="icon-btn" disabled title="PDF export is in the next release" aria-label="Download PDF, next release">' + ic('download') + '</button><span class="soon">Next</span></span>' +
       '</div></header>';
+    if (S.tab && S.tab !== 'plan') return head + TA.workView(S);
     var secs = [
       ['Objective', '<input class="ctl big" data-role="pobj" value="' + esc(S.objective) + '" aria-label="Objective">'],
       ['Target population', '<div class="fstack">' + (S.fields.population || []).map(fieldHTML).join('') + '</div>'],
       ['Design and sampling', '<div class="fstack">' + (S.fields.design || []).map(fieldHTML).join('') + '</div>'],
       ['Constructs and questions', constructBlocks(S, true)],
       ['Flags', flagsView(S)],
+      ['Consent and demographics', consentSection(S)],
       ['Ethics', '<p class="val">Standard review route, to confirm with the committee. No minors or health data in this design.</p>']
     ];
     var doc = secs.map(function (s, i) {
@@ -250,6 +253,28 @@
       (S.undo.length ? '<button type="button" class="icon-btn" data-act="undo" title="Undo last AI change" aria-label="Undo">' + ic('undo') + '</button>' : '') +
       '<button type="submit" class="icon-btn solid" aria-label="Send" title="Send">' + ic('arrowUp') + '</button></form></aside>';
     return head + '<div class="pgrid"><article class="doc">' + doc + '</article>' + chat + '</div>';
+  }
+
+  // Optional consent statement and demographic items. Local edits only.
+  function consentSection(S) {
+    var c = S.consent, d = S.demo;
+    var sw = function (on, act, label) {
+      return '<button type="button" class="switch' + (on ? ' on' : '') + '" data-act="' + act + '" role="switch" aria-checked="' + on + '" aria-label="' + label + '"><span></span></button>';
+    };
+    var h = '<div class="fstack">' +
+      '<div class="frow"><div class="flab">Consent</div><div class="fctl"><div class="optrow2">' + sw(c.on, 'consent', 'Consent statement') +
+      '<span class="mute small">' + (c.on ? 'Shown first, with a required "I agree" question.' : 'Off') + '</span></div>' +
+      (c.on ? '<label class="txlab">English</label><textarea class="ctl tx" rows="3" data-role="consent" data-lang="en" aria-label="Consent text in English">' + esc(c.text) + '</textarea>' +
+        '<label class="txlab">Arabic</label><textarea class="ctl tx" rows="3" dir="rtl" lang="ar" data-role="consent" data-lang="ar" aria-label="Consent text in Arabic">' + esc(c.textAr) + '</textarea>' : '') +
+      '</div></div>' +
+      '<div class="frow"><div class="flab">Demographics</div><div class="fctl"><div class="optrow2">' + sw(d.on, 'demo', 'Demographic questions') +
+      '<span class="mute small">' + (d.on ? d.items.length + ' items, asked at the end.' : 'Off') + '</span></div>' +
+      (d.on ? '<div class="chips dchips">' + TC.DEMOGRAPHICS.map(function (x) {
+        var on = d.items.indexOf(x.id) > -1;
+        return '<button type="button" class="chip' + (on ? ' on' : '') + '" aria-pressed="' + on + '" data-act="demoitem" data-v="' + x.id + '">' + esc(x.label) + (x.country ? ' <em>all countries</em>' : '') + '</button>';
+      }).join('') + '</div>' : '') +
+      '</div></div></div>';
+    return h;
   }
 
   // Respondent widget. opts: the option labels to show (English or Arabic).
@@ -283,10 +308,29 @@
         return '<div class="fq"><div class="fqt"><span class="qn">' + n + '</span>' + esc(ar && tq.text ? tq.text : q.text) + '</div>' + widget(q, opts, ar) + '</div>';
       }).join('');
     }).join('');
+    var pre = '', post = '';
+    if (S.consent.on) {
+      pre = '<div class="fsec-h">' + (ar ? TC.AR_UI.consent : 'Consent') + '</div><div class="fq consent"><p class="ctext">' + esc(ar ? S.consent.textAr : S.consent.text) + '</p>' +
+        '<div class="fqt">' + esc(ar ? TC.CONSENT_Q.ar : TC.CONSENT_Q.en) + ' <span class="req" aria-hidden="true">*</span></div>' +
+        widget({ responseType: 'yesno' }, null, ar) + '</div>';
+    }
+    if (S.demo.on && S.demo.items.length) {
+      post = '<div class="fsec-h">' + (ar ? TC.AR_UI.about : 'About you') + '</div>' + S.demo.items.map(function (id) {
+        var it = TC.demoItem(id);
+        if (!it) return '';
+        n++;
+        var lab = ar ? it.labelAr : it.label;
+        var ctl = it.country
+          ? '<select class="ctl cselect" aria-label="' + esc(lab) + '"><option>' + (ar ? TC.AR_UI.country : 'Select a country') + '</option>' + TC.countries(ar ? 'ar' : 'en').map(function (c) { return '<option>' + esc(c.name) + '</option>'; }).join('') + '</select>'
+          : widget({ responseType: 'single' }, ar ? it.optionsAr : it.options, ar);
+        return '<div class="fq demo"><div class="fqt"><span class="qn">' + n + '</span>' + esc(lab) + '</div>' + ctl + '</div>';
+      }).join('');
+    }
+    body = pre + body + post;
     var status = '';
     if (want && S.busy === 'translate') status = '<div class="fstatus">Translating the form into Arabic ' + DOTS + '</div>';
     else if (want && !ready) status = '<div class="fstatus">' + esc(S.formArError || 'The Arabic version is out of date.') + ' <button type="button" class="link" data-act="lang" data-v="ar">Translate again</button></div>';
-    var sec = TC.totalSeconds(S.constructs);
+    var sec = TC.totalSeconds(S.constructs) + TC.extraSeconds(S);
     return '<div class="scrim" data-scrim="1"><div class="modal" role="dialog" aria-modal="true" aria-label="Form preview">' +
       '<div class="mhead"><div><div class="mini">Form preview</div><h2 class="serif">' + esc(S.name) + '</h2></div>' +
       '<button type="button" class="icon-btn" data-act="closemodal" aria-label="Close">' + ic('x') + '</button></div>' +
@@ -324,6 +368,7 @@
     var mScroll = main.scrollTop;
     var doc = main.querySelector('.doc');
     var dScroll = doc ? doc.scrollTop : 0;
+    var work = main.querySelector('.work'), wScroll = work ? work.scrollTop : 0, wTab = S && S.tab;
     document.getElementById('rail').innerHTML = railHTML();
     var recent = document.getElementById('recent');
     recent.innerHTML = recentHTML();
@@ -334,10 +379,13 @@
     main.scrollTop = plan ? 0 : mScroll;
     var nd = main.querySelector('.doc');
     if (nd) nd.scrollTop = dScroll;
+    var nw = main.querySelector('.work');
+    if (nw && TA._lastTab === wTab) nw.scrollTop = wScroll;
+    TA._lastTab = wTab;
     var chm = document.getElementById('chm');
     if (chm) chm.scrollTop = chm.scrollHeight;
     document.getElementById('modal').innerHTML = S && TA.ui.modal === 'form' ? formModal(S) : '';
-    main.querySelectorAll('textarea.qtext').forEach(TA.autosize);
+    main.querySelectorAll('textarea.qtext, textarea.story').forEach(TA.autosize);
     main.querySelectorAll('input.oin').forEach(TA.fitOpt);
   };
 
